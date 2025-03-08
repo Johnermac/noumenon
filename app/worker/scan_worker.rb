@@ -5,7 +5,14 @@ class ScanWorker
   include Sidekiq::Worker
 
   def perform(site)
-    directories = ["admin", "robots.txt", "login", "dashboard", "uploads", "api", "assets"]
+    wordlist_path = Rails.root.join("tmp", "wordlist.txt")
+
+    unless File.exist?(wordlist_path)
+      puts "\n\t❌ Wordlist file not found at #{wordlist_path}"
+      return
+    end
+
+    directories = File.readlines(wordlist_path).map(&:strip).reject(&:empty?)
 
     found_directories = []
     not_found_directories = []
