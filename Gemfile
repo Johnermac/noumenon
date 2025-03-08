@@ -62,12 +62,6 @@ end
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem "capybara"  
+  gem "capybara"
+  gem "selenium-webdriver"
 end
-
-gem 'colorize'
-gem 'socksify', '= 1.7.1'
-gem 'nokogiri'
-gem 'selenium-webdriver', '= 4.7.1'
-gem 'watir', '= 7.2.2'
-gem 'sidekiq'

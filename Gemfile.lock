@@ -96,7 +96,6 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
-    colorize (1.1.0)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.0)
     crass (1.0.6)
@@ -207,25 +206,18 @@ GEM
     rake (13.2.1)
     rdoc (6.12.0)
       psych (>= 4.0.0)
-    redis-client (0.24.0)
-      connection_pool
     regexp_parser (2.10.0)
     reline (0.6.0)
       io-console (~> 0.5)
     rexml (3.4.1)
     rubyzip (2.4.1)
     securerandom (0.3.2)
-    selenium-webdriver (4.7.1)
+    selenium-webdriver (4.26.0)
+      base64 (~> 0.2)
+      logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
-    sidekiq (7.3.9)
-      base64
-      connection_pool (>= 2.3.0)
-      logger
-      rack (>= 2.2.4)
-      redis-client (>= 0.22.2)
-    socksify (1.7.1)
     sprockets (4.2.1)
       concurrent-ruby (~> 1.0)
       rack (>= 2.2.4, < 4)
@@ -247,9 +239,6 @@ GEM
       railties (>= 6.0.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    watir (7.2.2)
-      regexp_parser (>= 1.2, < 3)
-      selenium-webdriver (~> 4.2)
     web-console (4.2.1)
       actionview (>= 6.0.0)
       activemodel (>= 6.0.0)
@@ -273,22 +262,17 @@ PLATFORMS
 DEPENDENCIES
   bootsnap
   capybara
-  colorize
   debug
   importmap-rails
   jbuilder
-  nokogiri
   puma (>= 5.0)
   rails (~> 7.1.5, >= 7.1.5.1)
-  selenium-webdriver (= 4.7.1)
-  sidekiq
-  socksify (= 1.7.1)
+  selenium-webdriver
   sprockets-rails
   sqlite3 (>= 1.4)
   stimulus-rails
   turbo-rails
   tzinfo-data
-  watir (= 7.2.2)
   web-console
 
 RUBY VERSION
