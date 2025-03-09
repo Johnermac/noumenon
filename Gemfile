@@ -54,6 +54,7 @@ group :development do
   gem "web-console"
   gem "sidekiq"
   gem "httparty"
+  gem "redis"
 
   # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
   # gem "rack-mini-profiler"

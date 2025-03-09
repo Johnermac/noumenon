@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Scanner</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+    }
+
+    .input-container {
+      position: relative;
+      display: inline-block;
+      width: 300px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid gray;
+      border-radius: 20px;
+      outline: none;
+      font-size: 16px;
+      background-color: white; 
+      color: black;
+    }
+
+    button {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    button img {
+      width: 20px;
+      height: 20px;
+      filter: invert(0); /* Preto */
+    }
+
+    .results {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .found {
+      color: lightgreen;
+    }
+
+    .not-found {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Site Scanner</h1>
+
+  <div class="container">
+    <form id="scan-form">
+      <div class="input-container">
+        <input type="text" id="site-input" name="site" placeholder="Enter site URL..." required>
+        <button type="submit">
+          <img src="https://cdn-icons-png.flaticon.com/512/622/622669.png" alt="Search">
+        </button>
+      </div>
+    </form>
+    <div id="result" class="results"></div> <!-- Aqui exibiremos o resultado -->
+  </div>
+  
+
+  <script>
+  document.getElementById("scan-form").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const siteInput = document.getElementById("site-input");
+    const resultElement = document.getElementById("result");
+    resultElement.innerHTML = "⌛ Scanning...";
+
+    const site = siteInput.value.trim();
+
+    if (!site) {
+      resultElement.innerHTML = "❌ Please enter a site URL.";
+      return;
+    }
+
+    try {
+      const response = await fetch("/scans/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ site: site }) 
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
+        
+        // Periodically check for scan results
+        const checkResults = setInterval(async () => {
+          const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
+          if (resultResponse.ok) {
+            const resultData = await resultResponse.json();
+
+            let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
+
+            if (resultData.found_directories && resultData.found_directories.length > 0) {
+              resultHTML += `<p class="found">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
+            }
+
+            if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
+              resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+            }
+
+            resultElement.innerHTML = resultHTML;
+            clearInterval(checkResults); // Stop checking once results are found
+          }
+        }, 5000); // Check every 5 seconds
+      } else {
+        resultElement.innerHTML = `❌ Error: ${data.error}`;
+      }
+    } catch (error) {
+      resultElement.innerHTML = "❌ Failed to start scan.";
+    }
+  });
+  </script>
+
+</body>
+</html>

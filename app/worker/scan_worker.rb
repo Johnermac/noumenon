@@ -1,10 +1,12 @@
 require "httparty"
+require "redis"
+
 
 class ScanWorker
   include HTTParty
   include Sidekiq::Worker
 
-  def perform(site)
+  def perform(site, scan_directories)
     wordlist_path = Rails.root.join("tmp", "wordlist.txt")
 
     unless File.exist?(wordlist_path)
@@ -27,6 +29,14 @@ class ScanWorker
         not_found_directories << dir
       end
     end
+
+    result = {
+      found_directories: found_directories,
+      not_found_directories: not_found_directories
+    }
+
+    # Save the results to Redis (assuming you have Redis set up)
+    REDIS.set("scan_results_#{site}", result.to_json)
 
     puts "\n  Scan Results for #{site}:"
     puts "    \t✅ Found Directories: #{found_directories.join(', ')}" if found_directories.any?
