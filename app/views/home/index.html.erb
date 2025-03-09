@@ -143,10 +143,16 @@
         </button>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="scan-directories-toggle" name="scan_directories" checked>
+        <input type="checkbox" id="scan-directories-toggle" name="scan_directories" unchecked>
         <span class="slider"></span>
       </label>
       <span> Scan Directories</span>
+
+      <label class="toggle-switch">
+        <input type="checkbox" id="scan-subdomains-toggle" name="scan_subdomains" unchecked>
+        <span class="slider"></span>
+      </label>
+      <span> Scan Subdomains</span>
     </form>
     <div id="result" class="results"></div> <!-- Here the results will be displayed -->
   </div>
@@ -156,12 +162,17 @@
       event.preventDefault();
 
       const siteInput = document.getElementById("site-input");
+
       const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
+      const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
+
+
       const resultElement = document.getElementById("result");
       resultElement.innerHTML = "⌛ Scanning...";
 
       const site = siteInput.value.trim();
       const scanDirectories = scanDirectoriesToggle.checked;
+      const scanSubdomains = scanSubdomainsToggle.checked;
 
       if (!site) {
         resultElement.innerHTML = "❌ Please enter a site URL.";
@@ -174,7 +185,7 @@
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ site: site, scan_directories: scanDirectories }) 
+          body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains }) 
         });
 
         const data = await response.json();
