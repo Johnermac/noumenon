@@ -7,6 +7,9 @@ class ScanWorker
   include Sidekiq::Worker
 
   def perform(site, scan_directories)
+
+    # -----------------  VALIDATE WORDLIST  ---------------------
+ 
     wordlist_path = Rails.root.join("tmp", "wordlist.txt")
 
     unless File.exist?(wordlist_path)
@@ -14,8 +17,38 @@ class ScanWorker
       return
     end
 
+    # ---------------------  DIR  ------------------------------
+
     directories = File.readlines(wordlist_path).map(&:strip).reject(&:empty?)
 
+    
+
+    puts "\n => RUN DIR? #{scan_directories}"
+
+    if scan_directories
+      found_directories, not_found_directories = run_directories(site, directories)
+
+      result = {
+      found_directories: found_directories,
+      not_found_directories: not_found_directories
+      }
+
+      # Save the results to Redis (assuming you have Redis set up)
+      REDIS.set("scan_results_#{site}", result.to_json)
+      REDIS.expire("scan_results_#{site}", 10)
+
+      puts "\n  Scan Results for #{site}:"
+      puts "    \t✅ Found Directories: #{found_directories.join(', ')}" if found_directories.any?
+      puts "    \t❌ Not Found Directories: #{not_found_directories.join(', ')}\n" if not_found_directories.any?
+
+    end   
+
+    # -------------------------------------------------------------------
+  end
+
+  private
+
+  def run_directories(site, directories)
     found_directories = []
     not_found_directories = []
 
@@ -27,19 +60,8 @@ class ScanWorker
         found_directories << dir
       else
         not_found_directories << dir
-      end
+      end      
     end
-
-    result = {
-      found_directories: found_directories,
-      not_found_directories: not_found_directories
-    }
-
-    # Save the results to Redis (assuming you have Redis set up)
-    REDIS.set("scan_results_#{site}", result.to_json)
-
-    puts "\n  Scan Results for #{site}:"
-    puts "    \t✅ Found Directories: #{found_directories.join(', ')}" if found_directories.any?
-    puts "    \t❌ Not Found Directories: #{not_found_directories.join(', ')}\n" if not_found_directories.any?
+    [found_directories, not_found_directories]
   end
 end

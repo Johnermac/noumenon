@@ -5,6 +5,8 @@ class ScansController < ApplicationController
     site = params[:site]
     scan_directories = params[:scan_directories] || false  # Default to false if not provided
 
+    puts "\n => Received scan_directories: #{scan_directories}" # Debug statement
+
     if site.blank?
       render json: { error: "Site URL is required" }, status: :unprocessable_entity
       return

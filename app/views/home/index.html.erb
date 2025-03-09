@@ -17,10 +17,19 @@
       flex-direction: column;
     }
 
+    .form-container {
+      display: flex;
+      flex-direction: column; /* Change to column to stack elements vertically */
+      align-items: center;
+      gap: 15px; /* Adjust the spacing between elements */
+      width: 100%; /* Ensure the form takes up the full width */
+      max-width: 100px; /* Limit the maximum width */
+    }
+
     .input-container {
       position: relative;
-      display: inline-block;
-      width: 300px;
+      width: 100%; /* Double the width of the input container */
+      margin-bottom: 20px; /* Add space below the input container */
     }
 
     input[type="text"] {
@@ -62,7 +71,64 @@
     .not-found {
       color: red;
     }
+
+    /* Toggle Switch CSS */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .label-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0; /* Prevent the toggle from shrinking */
+    }
   </style>
+
+
+
+
 </head>
 <body>
 
@@ -76,67 +142,73 @@
           <img src="https://cdn-icons-png.flaticon.com/512/622/622669.png" alt="Search">
         </button>
       </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="scan-directories-toggle" name="scan_directories" checked>
+        <span class="slider"></span>
+      </label>
+      <span> Scan Directories</span>
     </form>
-    <div id="result" class="results"></div> <!-- Aqui exibiremos o resultado -->
+    <div id="result" class="results"></div> <!-- Here the results will be displayed -->
   </div>
-  
 
   <script>
-  document.getElementById("scan-form").addEventListener("submit", async function(event) {
-    event.preventDefault();
+    document.getElementById("scan-form").addEventListener("submit", async function(event) {
+      event.preventDefault();
 
-    const siteInput = document.getElementById("site-input");
-    const resultElement = document.getElementById("result");
-    resultElement.innerHTML = "⌛ Scanning...";
+      const siteInput = document.getElementById("site-input");
+      const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
+      const resultElement = document.getElementById("result");
+      resultElement.innerHTML = "⌛ Scanning...";
 
-    const site = siteInput.value.trim();
+      const site = siteInput.value.trim();
+      const scanDirectories = scanDirectoriesToggle.checked;
 
-    if (!site) {
-      resultElement.innerHTML = "❌ Please enter a site URL.";
-      return;
-    }
-
-    try {
-      const response = await fetch("/scans/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ site: site }) 
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
-        
-        // Periodically check for scan results
-        const checkResults = setInterval(async () => {
-          const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
-          if (resultResponse.ok) {
-            const resultData = await resultResponse.json();
-
-            let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
-
-            if (resultData.found_directories && resultData.found_directories.length > 0) {
-              resultHTML += `<p class="found">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
-            }
-
-            if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-              resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
-            }
-
-            resultElement.innerHTML = resultHTML;
-            clearInterval(checkResults); // Stop checking once results are found
-          }
-        }, 5000); // Check every 5 seconds
-      } else {
-        resultElement.innerHTML = `❌ Error: ${data.error}`;
+      if (!site) {
+        resultElement.innerHTML = "❌ Please enter a site URL.";
+        return;
       }
-    } catch (error) {
-      resultElement.innerHTML = "❌ Failed to start scan.";
-    }
-  });
+
+      try {
+        const response = await fetch("/scans/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ site: site, scan_directories: scanDirectories }) 
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
+          
+          // Periodically check for scan results
+          const checkResults = setInterval(async () => {
+            const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
+            if (resultResponse.ok) {
+              const resultData = await resultResponse.json();
+
+              let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
+
+              if (resultData.found_directories && resultData.found_directories.length > 0) {
+                resultHTML += `<p class="found">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
+              }
+
+              if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
+                resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+              }
+
+              resultElement.innerHTML = resultHTML;
+              clearInterval(checkResults); // Stop checking once results are found
+            }
+          }, 5000); // Check every 5 seconds
+        } else {
+          resultElement.innerHTML = `❌ Error: ${data.error}`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = "❌ Failed to start scan.";
+      }
+    });
   </script>
 
 </body>
