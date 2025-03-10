@@ -64,12 +64,20 @@
       text-align: left;
     }
 
-    .found {
+    .found_dir {
       color: lightgreen;
     }
 
-    .not-found {
+    .not-found_dir {
       color: red;
+    }
+
+    .active_sub {
+      color: lightgreen;
+    }
+
+    .found_sub {
+      color: yellow;
     }
 
     /* Toggle Switch CSS */
@@ -202,17 +210,24 @@
               let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
 
               if (resultData.found_directories && resultData.found_directories.length > 0) {
-                resultHTML += `<p class="found">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
+                resultHTML += `<p class="found_dir">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
               }
 
               if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+                resultHTML += `<p class="not-found_dir">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+              }
+              if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
+                resultHTML += `<p class="found_sub">🟡 Found Subdomains: ${resultData.found_subdomains.join(", ")}</p>`;
+              }
+
+              if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
+                resultHTML += `<p class="active_sub">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
               }
 
               resultElement.innerHTML = resultHTML;
               clearInterval(checkResults); // Stop checking once results are found
             }
-          }, 5000); // Check every 5 seconds
+          }, 10000); // Check every 5 seconds
         } else {
           resultElement.innerHTML = `❌ Error: ${data.error}`;
         }

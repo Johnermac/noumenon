@@ -282,6 +282,7 @@ DEPENDENCIES
   httparty
   importmap-rails
   jbuilder
+  nokogiri
   puma (>= 5.0)
   rails (~> 7.1.5, >= 7.1.5.1)
   redis
