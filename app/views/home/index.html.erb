@@ -167,75 +167,101 @@
 
   <script>
     document.getElementById("scan-form").addEventListener("submit", async function(event) {
-      event.preventDefault();
+        event.preventDefault();
 
-      const siteInput = document.getElementById("site-input");
+        const siteInput = document.getElementById("site-input");
+        const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
+        const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
 
-      const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
-      const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
+        const resultElement = document.getElementById("result");
+        resultElement.innerHTML = "⌛ Scanning...";
 
+        const site = siteInput.value.trim();
+        const scanDirectories = scanDirectoriesToggle.checked;
+        const scanSubdomains = scanSubdomainsToggle.checked;
 
-      const resultElement = document.getElementById("result");
-      resultElement.innerHTML = "⌛ Scanning...";
-
-      const site = siteInput.value.trim();
-      const scanDirectories = scanDirectoriesToggle.checked;
-      const scanSubdomains = scanSubdomainsToggle.checked;
-
-      if (!site) {
-        resultElement.innerHTML = "❌ Please enter a site URL.";
-        return;
-      }
-
-      try {
-        const response = await fetch("/scans/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains }) 
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
-          
-          // Periodically check for scan results
-          const checkResults = setInterval(async () => {
-            const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
-            if (resultResponse.ok) {
-              const resultData = await resultResponse.json();
-
-              let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
-
-              if (resultData.found_directories && resultData.found_directories.length > 0) {
-                resultHTML += `<p class="found_dir">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
-              }
-
-              if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                resultHTML += `<p class="not-found_dir">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
-              }
-              if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
-                resultHTML += `<p class="found_sub">🟡 Found Subdomains: ${resultData.found_subdomains.join(", ")}</p>`;
-              }
-
-              if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
-                resultHTML += `<p class="active_sub">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
-              }
-
-              resultElement.innerHTML = resultHTML;
-              clearInterval(checkResults); // Stop checking once results are found
-            }
-          }, 10000); // Check every 5 seconds
-        } else {
-          resultElement.innerHTML = `❌ Error: ${data.error}`;
+        if (!site) {
+            resultElement.innerHTML = "❌ Please enter a site URL.";
+            return;
         }
-      } catch (error) {
-        resultElement.innerHTML = "❌ Failed to start scan.";
-      }
+
+        try {
+            const response = await fetch("/scans/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains }) 
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
+                
+                // Initialize flags to check if scans are complete
+                let directoriesComplete = !scanDirectories; // If scanDirectories is false, consider it complete
+                let subdomainsComplete = !scanSubdomains;   // If scanSubdomains is false, consider it complete
+                let resultData = {};
+
+                // Function to update results
+                const updateResults = () => {
+                    let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
+
+                    if (resultData.found_directories && resultData.found_directories.length > 0) {
+                        resultHTML += `<p class="found_directories">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
+                    }
+
+                    if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
+                        resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+                    }
+
+                    if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
+                        resultHTML += `<p class="found_subdomains">🟡 Found Subdomains: ${resultData.found_subdomains.join(", ")}</p>`;
+                    }
+
+                    if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
+                        resultHTML += `<p class="active">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
+                    }
+
+                    resultElement.innerHTML = resultHTML;
+                };
+
+                // Periodically check for scan results
+                const checkResults = setInterval(async () => {
+                    const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
+                    if (resultResponse.ok) {
+                        const currentResultData = await resultResponse.json();
+
+                        // Merge currentResultData into resultData
+                        resultData = { ...resultData, ...currentResultData };
+
+                        // Check if directories scan is complete
+                        if (currentResultData.found_directories || currentResultData.not_found_directories) {
+                            directoriesComplete = true;
+                        }
+
+                        // Check if subdomains scan is complete
+                        if (currentResultData.found_subdomains || currentResultData.active_subdomains) {
+                            subdomainsComplete = true;
+                        }
+
+                        // Update results if both scans are complete or if only one scan is enabled
+                        if (directoriesComplete && subdomainsComplete) {
+                            updateResults();
+                            clearInterval(checkResults); // Stop checking once results are found
+                        }
+                    }
+                }, 5000); // Check every 5 seconds
+            } else {
+                resultElement.innerHTML = `❌ Error: ${data.error}`;
+            }
+        } catch (error) {
+            resultElement.innerHTML = "❌ Failed to start scan.";
+        }
     });
-  </script>
+</script>
+
 
 </body>
 </html>
