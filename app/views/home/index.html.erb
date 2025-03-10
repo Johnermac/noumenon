@@ -64,7 +64,7 @@
       text-align: left;
     }
 
-    .found_dir {
+    .found_directories {
       color: lightgreen;
     }
 
@@ -76,7 +76,7 @@
       color: lightgreen;
     }
 
-    .found_sub {
+    .found_subdomains {
       color: yellow;
     }
 
@@ -213,7 +213,7 @@
                     }
 
                     if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                        resultHTML += `<p class="not-found">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+                        resultHTML += `<p class="not-found_dir">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
                     }
 
                     if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
@@ -221,7 +221,7 @@
                     }
 
                     if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
-                        resultHTML += `<p class="active">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
+                        resultHTML += `<p class="active_sub">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
                     }
 
                     resultElement.innerHTML = resultHTML;
