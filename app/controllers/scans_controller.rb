@@ -24,17 +24,21 @@ class ScansController < ApplicationController
     site = params[:site]
     dir_results_json = REDIS.get("scan_results_#{site}_directories")
     sub_results_json = REDIS.get("scan_results_#{site}_subdomains")
+    active_subdomains = REDIS.smembers("active_subdomains_#{site}")
 
+    subdomain_scan_complete = REDIS.get("subdomain_scan_complete_#{site}") == "true"
 
-    if dir_results_json.nil? && sub_results_json.nil?
+    if dir_results_json.nil? && sub_results_json.nil? && active_subdomains.empty?
       render json: { error: "No results found for #{site}" }, status: :not_found
       return
     end
 
     dir_results = dir_results_json ? JSON.parse(dir_results_json) : {}
     sub_results = sub_results_json ? JSON.parse(sub_results_json) : {}
+    sub_results["active_subdomains"] = active_subdomains unless active_subdomains.empty?
 
     combined_results = dir_results.merge(sub_results)
+    combined_results["subdomain_scan_complete"] = subdomain_scan_complete
 
     render json: combined_results
   end

@@ -5,7 +5,7 @@ require "nokogiri"
 
 class ScanWorker
   include HTTParty
-  include Sidekiq::Worker
+  include Sidekiq::Worker  
 
   def perform(site, scan_directories, scan_subdomains)
 
@@ -45,19 +45,25 @@ class ScanWorker
     # ---------------------  SUB  ------------------------------
 
     if scan_subdomains
-      found_subdomains, active_subdomains = run_subdomains(site)
+      found_subdomains = []
 
-      result = {
-        found_subdomains: found_subdomains,
-        active_subdomains: active_subdomains 
-      }
+      found_subdomains = run_subdomains(site)
 
-      REDIS.set("scan_results_#{site}_subdomains", result.to_json)
+      #found_subdomains = found_subdomains || []
+
+      total_subdomains = found_subdomains.length
+      REDIS.set("subdomain_scan_complete_#{site}", false)
+
+      found_subdomains.each do |subdomain|
+        SubdomainWorker.perform_async(site, subdomain, total_subdomains)
+      end
+
+      REDIS.set("scan_results_#{site}_subdomains", { found_subdomains: found_subdomains }.to_json)
       REDIS.expire("scan_results_#{site}_subdomains", 10)
 
       puts "\n  Scan Results for #{site}:"
       puts "    \t🟡 Found Subdomains: #{found_subdomains.join(', ')}" if found_subdomains.any?
-      puts "    \t🟢 Active Subdomains: #{active_subdomains.join(', ')}\n" if active_subdomains.any?      
+      #puts "    \t🟢 Active Subdomains: #{active_subdomains.join(', ')}\n" if active_subdomains.any?      
 
     end
   end
@@ -83,40 +89,26 @@ class ScanWorker
 
 
   def run_subdomains(site)
-    found_subdomains = []
-    active_subdomains = []
+    found_subdomains = []    
 
     stripped_site = site.gsub(/https?:\/\/(www\.)?/, "").gsub(/(www\.)?/, "")
 
     puts "--->  stripped_site: #{stripped_site}"
 
-    # 1 - Getting subdomains from crt.sh
-    #url = "https://crt.sh/?q=#{stripped_site}"
+    # 1 - Getting subdomains from crt.sh    
     response = HTTParty.get("https://crt.sh/?q=#{stripped_site}")
     html_doc = Nokogiri::HTML(response.body)
 
+    
+    #puts html_doc.to_html
+
     html_doc.css('td').each do |td|
       found_subdomains += td.text.scan(/[a-z0-9]+\.#{Regexp.escape(stripped_site)}/)
-    end
-  
-    found_subdomains = found_subdomains.uniq
-    puts "--->  found_subdomains: #{found_subdomains}"    
+    end        
 
-    # 2 - Checking if the domains are accessible + Adding threads
-    found_subdomains.each do |subdomain|
-      begin
-        next if active_subdomains.include?(subdomain)
-        response = HTTParty.get(URI("http://#{subdomain}"))
-        puts "--->  sub: #{subdomain}"
-        if response.success? || response.code.to_s.start_with?("3")
-          active_subdomains << subdomain        
-          puts "--->active-sub:  #{active_subdomains.last}"
-        end
-      rescue StandardError => e
-        puts e.message
-      end
-    end
+    puts "--->  found_subdomains: #{found_subdomains.uniq}"
 
-    [found_subdomains, active_subdomains]
+    found_subdomains.uniq
+
   end
 end
