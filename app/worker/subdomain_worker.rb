@@ -16,15 +16,12 @@ class SubdomainWorker
       puts "Error processing subdomain #{subdomain}: #{e.message}"      
     ensure
        # Track the total number of subdomains processed (active or inactive)
-       REDIS.incr("processed_subdomains_#{site}")
+       REDIS.incrby("processed_subdomains_#{site}", 1)
 
        # Check the number of completed subdomains
        processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
        puts "\n---> processed_subdomains: #{processed_subdomains}, total_subdomains: #{total_subdomains}"
-       if processed_subdomains >= total_subdomains
-         REDIS.set("subdomain_scan_complete_#{site}", true)
-         puts "\n\n---> subdomain complete"
-       end
+       REDIS.set("subdomain_scan_complete_#{site}", "true") if processed_subdomains >= total_subdomains
     end
 
     # -------------------- CLEANUP --------------------

@@ -16,19 +16,16 @@ class DirectoriesWorker
           puts "Failed or error processing #{url}" unless dir.empty?
           REDIS.sadd("not_found_directories_#{site}", dir) unless dir.empty?
         end
-        
+
         REDIS.incrby("processed_directories_#{site}", 1)
         
       end      
 
       # Check the number of completed subdomains
       processed_directories = REDIS.get("processed_directories_#{site}").to_i   
-      puts "---> Processed directories: #{processed_directories}, Total: #{total_directories}"   
-      if processed_directories >= total_directories
-        REDIS.set("directories_scan_complete_#{site}", true)    
-        puts "---> Directories scan complete for site: #{site}"    
-      end
-      
+      puts "---> Processed directories: #{processed_directories}, Total: #{total_directories}" 
+      REDIS.set("directories_scan_complete_#{site}", "true") if processed_directories >= total_directories  
+            
     rescue StandardError => e
       puts "Error during directories scan: #{e.message}"    
     end

@@ -59,24 +59,6 @@ class ScanWorker
 
   private
 
-  def run_directories(site, directories)
-    found_directories = []
-    not_found_directories = []
-
-    directories.each do |dir|
-      url = "#{site}/#{dir}"
-      response = HTTParty.get(url)
-
-      if response.success? || response.code.to_s.start_with?("3")
-        found_directories << dir
-      else
-        not_found_directories << dir
-      end      
-    end
-    [found_directories, not_found_directories]
-  end
-
-
   def run_subdomains(site)
     found_subdomains = []    
 
@@ -95,7 +77,7 @@ class ScanWorker
       found_subdomains += td.text.scan(/[a-z0-9]+\.#{Regexp.escape(stripped_site)}/)
     end        
 
-    puts "--->  found_subdomains: #{found_subdomains.uniq}"
+    # puts "--->  found_subdomains: #{found_subdomains.uniq}"
 
     found_subdomains.uniq
 
