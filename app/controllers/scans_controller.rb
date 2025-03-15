@@ -22,23 +22,27 @@ class ScansController < ApplicationController
 
   def show
     site = params[:site]
-    dir_results_json = REDIS.get("scan_results_#{site}_directories")
+    
     sub_results_json = REDIS.get("scan_results_#{site}_subdomains")
+    found_directories = REDIS.smembers("found_directories_#{site}")
+    not_found_directories = REDIS.smembers("not_found_directories_#{site}")
     active_subdomains = REDIS.smembers("active_subdomains_#{site}")
 
     subdomain_scan_complete = REDIS.get("subdomain_scan_complete_#{site}") == "true"
+    directories_scan_complete = REDIS.get("directories_scan_complete_#{site}") == "true"
 
-    if dir_results_json.nil? && sub_results_json.nil? && active_subdomains.empty?
+    if found_directories.empty? && not_found_directories.empty? && sub_results_json.nil? && active_subdomains.empty?
       render json: { error: "No results found for #{site}" }, status: :not_found
       return
     end
 
-    dir_results = dir_results_json ? JSON.parse(dir_results_json) : {}
-    sub_results = sub_results_json ? JSON.parse(sub_results_json) : {}
-    sub_results["active_subdomains"] = active_subdomains unless active_subdomains.empty?
-
-    combined_results = dir_results.merge(sub_results)
-    combined_results["subdomain_scan_complete"] = subdomain_scan_complete
+    combined_results = {
+      found_directories: found_directories,
+      not_found_directories: not_found_directories,
+      active_subdomains: active_subdomains,
+      subdomain_scan_complete: subdomain_scan_complete,
+      directories_scan_complete: directories_scan_complete
+    }
 
     render json: combined_results
   end

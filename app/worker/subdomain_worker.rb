@@ -11,20 +11,25 @@ class SubdomainWorker
       if response.success? || response.code.to_s.start_with?("3")
         REDIS.sadd("active_subdomains_#{site}", subdomain)
         puts "\n---> active-sub: #{subdomain}"
-      end
-
-      # Track the total number of subdomains processed (active or inactive)
-      REDIS.incr("processed_subdomains_#{site}")
-
-      # Check the number of completed subdomains
-      processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
-      puts "\n---> processed_subdomains: #{processed_subdomains}, total_subdomains: #{total_subdomains}"
-      if processed_subdomains >= total_subdomains
-        REDIS.set("subdomain_scan_complete_#{site}", true)
-        puts "\n\n---> subdomain complete"
-      end
+      end     
     rescue StandardError => e
-      puts "Error processing subdomain #{subdomain}: #{e.message}"
+      puts "Error processing subdomain #{subdomain}: #{e.message}"      
+    ensure
+       # Track the total number of subdomains processed (active or inactive)
+       REDIS.incr("processed_subdomains_#{site}")
+
+       # Check the number of completed subdomains
+       processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
+       puts "\n---> processed_subdomains: #{processed_subdomains}, total_subdomains: #{total_subdomains}"
+       if processed_subdomains >= total_subdomains
+         REDIS.set("subdomain_scan_complete_#{site}", true)
+         puts "\n\n---> subdomain complete"
+       end
     end
+
+    # -------------------- CLEANUP --------------------
+
+    REDIS.expire("processed_subdomains_#{site}", 10)
+    REDIS.expire("active_subdomains_#{site}", 10)
   end
 end

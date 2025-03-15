@@ -9,6 +9,9 @@ class ScanWorker
 
   def perform(site, scan_directories, scan_subdomains)
 
+    puts "\n => RUN DIR? #{scan_directories}"
+    puts "\n => RUN SUB? #{scan_subdomains}"
+
     # -----------------  VALIDATE WORDLIST  ---------------------
  
     wordlist_path = Rails.root.join("tmp", "wordlist.txt")
@@ -20,26 +23,12 @@ class ScanWorker
 
     # ---------------------  DIR  ------------------------------
 
-    directories = File.readlines(wordlist_path).map(&:strip).reject(&:empty?)    
-
-    puts "\n => RUN DIR? #{scan_directories}"
-    puts "\n => RUN SUB? #{scan_subdomains}"
+    directories = File.readlines(wordlist_path).map(&:strip).reject(&:empty?)        
 
     if scan_directories
-      found_directories, not_found_directories = run_directories(site, directories)
-
-      result = {
-      found_directories: found_directories,
-      not_found_directories: not_found_directories
-      }
-
-      REDIS.set("scan_results_#{site}_directories", result.to_json)
-      REDIS.expire("scan_results_#{site}_directories", 10)
-
-      puts "\n  Scan Results for #{site}:"
-      puts "    \t✅ Found Directories: #{found_directories.join(', ')}" if found_directories.any?
-      puts "    \t❌ Not Found Directories: #{not_found_directories.join(', ')}\n" if not_found_directories.any?
-
+      directories.each_slice(100) do |batch|
+        DirectoriesWorker.perform_async(site, batch, directories.size)
+      end
     end   
 
     # ---------------------  SUB  ------------------------------
@@ -78,7 +67,7 @@ class ScanWorker
       url = "#{site}/#{dir}"
       response = HTTParty.get(url)
 
-      if response.code == 200
+      if response.success? || response.code.to_s.start_with?("3")
         found_directories << dir
       else
         not_found_directories << dir
