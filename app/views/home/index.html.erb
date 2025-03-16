@@ -208,24 +208,45 @@
                 const updateResults = () => {
                     let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
 
+                    // Create links for found directories
                     if (resultData.found_directories && resultData.found_directories.length > 0) {
-                        resultHTML += `<p class="found_directories">✅ Found Directories: ${resultData.found_directories.join(", ")}</p>`;
+                        resultHTML += `<p class="found_directories">✅ Found Directories:</p><ul>`;
+                        resultData.found_directories.forEach(directory => {
+                            resultHTML += `<li><a href="${site}/${directory}" target="_blank">${directory}</a></li>`;
+                        });
+                        resultHTML += `</ul>`;
                     }
 
+                    // Create links for not-found directories (optional)
                     if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                        resultHTML += `<p class="not-found_dir">❌ Not Found Directories: ${resultData.not_found_directories.join(", ")}</p>`;
+                        resultHTML += `<p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
+                        resultData.not_found_directories.forEach(directory => {
+                            resultHTML += `<li><span>${directory}</span></li>`; // Not clickable, just plain text
+                        });
+                        resultHTML += `</ul>`;
                     }
 
+                    // Create links for found subdomains
                     if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
-                        resultHTML += `<p class="found_subdomains">🟡 Found Subdomains: ${resultData.found_subdomains.join(", ")}</p>`;
+                        resultHTML += `<p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
+                        resultData.found_subdomains.forEach(subdomain => {
+                            resultHTML += `<li><a href="https://${subdomain}.${site}" target="_blank">${subdomain}.${site}</a></li>`;
+                        });
+                        resultHTML += `</ul>`;
                     }
 
+                    // Create links for active subdomains
                     if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
-                        resultHTML += `<p class="active_sub">🟢 Active Subdomains: ${resultData.active_subdomains.join(", ")}</p>`;
+                        resultHTML += `<p class="active_sub">🟢 Active Subdomains:</p><ul>`;
+                        resultData.active_subdomains.forEach(subdomain => {
+                            resultHTML += `<li><a href="https://${subdomain}.${site}" target="_blank">${subdomain}.${site}</a></li>`;
+                        });
+                        resultHTML += `</ul>`;
                     }
 
                     resultElement.innerHTML = resultHTML;
                 };
+
 
                 // Periodically check for scan results
                 const checkResults = setInterval(async () => {

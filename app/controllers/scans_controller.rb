@@ -22,15 +22,24 @@ class ScansController < ApplicationController
 
   def show
     site = params[:site]
-    
-    found_subdomains = REDIS.get("scan_results_#{site}_subdomains")
+
+    # ---------- DIRECTORIES ---------
+
     found_directories = REDIS.smembers("found_directories_#{site}")
     not_found_directories = REDIS.smembers("not_found_directories_#{site}")
+
+    # ---------- SUBDOMAINS ----------
+
     active_subdomains = REDIS.smembers("active_subdomains_#{site}")
+    found_subdomains = REDIS.get("scan_results_#{site}_subdomains")
+
+    # ---------- STATUS --------------
 
     subdomain_scan_complete = REDIS.get("subdomain_scan_complete_#{site}") == "true"
     directories_scan_complete = REDIS.get("directories_scan_complete_#{site}") == "true"
 
+    # ---------- VALIDATION ----------
+    
     if found_directories.empty? && not_found_directories.empty? && found_subdomains.nil? && active_subdomains.empty?
       render json: { error: "No results found for #{site}" }, status: :not_found
       return
