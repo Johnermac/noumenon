@@ -7,10 +7,11 @@ class ScanWorker
   include HTTParty
   include Sidekiq::Worker  
 
-  def perform(site, scan_directories, scan_subdomains)
+  def perform(site, scan_directories, scan_subdomains, scan_links)
 
     puts "\n => RUN DIR? #{scan_directories}"
     puts "\n => RUN SUB? #{scan_subdomains}"
+    puts "\n => RUN LINKS? #{scan_links}"
 
     # -----------------  VALIDATE WORDLIST  ---------------------
  
@@ -55,6 +56,19 @@ class ScanWorker
       #puts "    \t🟢 Active Subdomains: #{active_subdomains.join(', ')}\n" if active_subdomains.any?      
 
     end
+
+    # ---------------------  LINKS  ------------------------------
+
+    if scan_links
+      wait_links(site, scan_directories, scan_subdomains)
+
+      urls_to_process = run_links(site, scan_directories, scan_subdomains)
+
+      # Enqueue LinksWorker for each URL
+      urls_to_process.each do |url|
+        LinksWorker.perform_async(url, site)
+      end
+    end
   end
 
   private
@@ -81,5 +95,44 @@ class ScanWorker
 
     found_subdomains.uniq
 
+  end
+
+  def wait_links(site, scan_directories, scan_subdomains)
+    # Wait for directories scan to complete
+    if scan_directories
+      until REDIS.get("directories_scan_complete_#{site}") == "true"
+        puts "Waiting for directories scan to complete..."
+        sleep(5) # Check every 5 seconds
+      end
+    end
+
+    # Wait for subdomains scan to complete
+    if scan_subdomains
+      until REDIS.get("subdomain_scan_complete_#{site}") == "true"
+        puts "Waiting for subdomain scan to complete..."
+        sleep(5) # Check every 5 seconds
+      end
+    end
+  end
+
+  def run_links(site, scan_directories, scan_subdomains)
+    urls = []
+
+    # Add directory URLs
+    if scan_directories
+      found_directories = REDIS.smembers("found_directories_#{site}")
+      urls += found_directories.map { |dir| "#{site}/#{dir}" } if found_directories.any?
+    end
+
+    # Add subdomain URLs
+    if scan_subdomains
+      active_subdomains = REDIS.smembers("active_subdomains_#{site}")
+      urls += active_subdomains.map { |sub| "http://#{sub}" } if active_subdomains.any?
+    end
+
+    # Add main site URL if no directories or subdomains are scanned
+    urls << "#{site}" if urls.empty?
+
+    urls
   end
 end

@@ -32,7 +32,7 @@
       border-radius: 15px;
       padding: 30px 25px;
       width: 90%;
-      max-width: 400px;
+      max-width: 800px;
       min-width: 280px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
@@ -46,11 +46,11 @@
 
     .input-container {
       position: relative;
-      width: 88%;
+      width: 94%;
     }
 
     input[type="text"] {
-      width: 88%;
+      width: 94%;
       padding: 12px 45px 12px 15px;
       border: 1px solid #555;
       border-radius: 25px;
@@ -209,6 +209,7 @@
         const siteInput = document.getElementById("site-input");
         const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
         const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
+        const scanLinksToggle = document.getElementById("scan-links-toggle");
 
         const resultElement = document.getElementById("result");
         resultElement.innerHTML = "⌛ Scanning...";
@@ -216,6 +217,7 @@
         const site = siteInput.value.trim();
         const scanDirectories = scanDirectoriesToggle.checked;
         const scanSubdomains = scanSubdomainsToggle.checked;
+        const scanLinks = scanLinksToggle.checked;
 
         if (!site) {
             resultElement.innerHTML = "❌ Please enter a site URL.";
@@ -228,7 +230,7 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains }) 
+                body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks }) 
             });
 
             const data = await response.json();
@@ -239,6 +241,7 @@
                 // Initialize flags to check if scans are complete
                 let directoriesComplete = !scanDirectories; // If scanDirectories is false, consider it complete
                 let subdomainsComplete = !scanSubdomains;   // If scanSubdomains is false, consider it complete
+                let linksComplete = !scanLinks;   // If scanLinks is false, consider it complete
                 let resultData = {};
 
                 // Function to update results
@@ -267,7 +270,7 @@
                     if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
                         resultHTML += `<p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
                         resultData.found_subdomains.forEach(subdomain => {
-                            resultHTML += `<li><a href="https://${subdomain}.${site}" target="_blank">${subdomain}.${site}</a></li>`;
+                            resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
                         });
                         resultHTML += `</ul>`;
                     }
@@ -276,11 +279,17 @@
                     if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
                         resultHTML += `<p class="active_sub">🟢 Active Subdomains:</p><ul>`;
                         resultData.active_subdomains.forEach(subdomain => {
-                            resultHTML += `<li><a href="https://${subdomain}.${site}" target="_blank">${subdomain}.${site}</a></li>`;
+                            resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
                         });
                         resultHTML += `</ul>`;
                     }
-
+                    if (resultData.extracted_links && resultData.extracted_links.length > 0) {
+                        resultHTML += `<p class="extracted_links">🔗 Extracted Links:</p><ul>`;
+                        resultData.extracted_links.forEach(link => {
+                            resultHTML += `<li>${link}<span>${link}</span></li>`;
+                        });
+                        resultHTML += `</ul>`;
+                    }
                     resultElement.innerHTML = resultHTML;
                 };
 

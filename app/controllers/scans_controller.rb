@@ -5,17 +5,18 @@ class ScansController < ApplicationController
     site = params[:site]
     scan_directories = params[:scan_directories] || false  # Default to false if not provided
     scan_subdomains = params[:scan_subdomains] || false
+    scan_links = params[:scan_links] || false
 
-    puts "\n => Received scan_directories: #{scan_directories}" # Debug
-    puts "\n => Received scan_subdomains: #{scan_subdomains}" # Debug
-
+    #puts "\n => Received scan_directories: #{scan_directories}" # Debug
+    #puts "\n => Received scan_subdomains: #{scan_subdomains}" # Debug
+    #puts "\n => Received scan_links: #{scan_links}" # Debug
 
     if site.blank?
       render json: { error: "Site URL is required" }, status: :unprocessable_entity
       return
     end
 
-    ScanWorker.perform_async(site, scan_directories, scan_subdomains)
+    ScanWorker.perform_async(site, scan_directories, scan_subdomains, scan_links)
 
     render json: { message: "Scan started for #{site}", scan_directories: scan_directories, scan_subdomains: scan_subdomains }, status: :accepted
   end
@@ -26,12 +27,17 @@ class ScansController < ApplicationController
     # ---------- DIRECTORIES ---------
 
     found_directories = REDIS.smembers("found_directories_#{site}")
-    not_found_directories = REDIS.smembers("not_found_directories_#{site}")
+    not_found_directories = REDIS.smembers("not_found_directories_#{site}")    
 
     # ---------- SUBDOMAINS ----------
 
     active_subdomains = REDIS.smembers("active_subdomains_#{site}")
     found_subdomains = REDIS.get("scan_results_#{site}_subdomains")
+
+    # ---------- LINKS ---------------
+
+
+    extracted_links = REDIS.smembers("links_#{site}")
 
     # ---------- STATUS --------------
 
@@ -39,8 +45,8 @@ class ScansController < ApplicationController
     directories_scan_complete = REDIS.get("directories_scan_complete_#{site}") == "true"
 
     # ---------- VALIDATION ----------
-    
-    if found_directories.empty? && not_found_directories.empty? && found_subdomains.nil? && active_subdomains.empty?
+
+    if found_directories.empty? && not_found_directories.empty? && found_subdomains.nil? && active_subdomains.empty? && extracted_links.empty?
       render json: { error: "No results found for #{site}" }, status: :not_found
       return
     end
@@ -50,6 +56,7 @@ class ScansController < ApplicationController
       found_directories: found_directories,
       not_found_directories: not_found_directories,
       active_subdomains: active_subdomains,
+      extracted_links: extracted_links,
       subdomain_scan_complete: subdomain_scan_complete,
       directories_scan_complete: directories_scan_complete
     }
