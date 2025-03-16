@@ -156,6 +156,27 @@
       color: #ccc;
       font-size: 14px;
     }
+
+        .result-section {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: #2a2a2a;
+    }
+
+    .result-section ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .result-section p {
+      margin: 0 0 5px 0;
+      font-weight: bold;
+    }
+
 </style>
 
 
@@ -200,6 +221,7 @@
 
     </form>
     <div id="result" class="results"></div> <!-- Here the results will be displayed -->
+    
   </div>
 
   <script>
@@ -246,52 +268,56 @@
 
                 // Function to update results
                 const updateResults = () => {
-                    let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
+                  let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
 
-                    // Create links for found directories
-                    if (resultData.found_directories && resultData.found_directories.length > 0) {
-                        resultHTML += `<p class="found_directories">✅ Found Directories:</p><ul>`;
-                        resultData.found_directories.forEach(directory => {
-                            resultHTML += `<li><a href="${site}/${directory}" target="_blank">${directory}</a></li>`;
-                        });
-                        resultHTML += `</ul>`;
-                    }
+                  if (resultData.found_directories && resultData.found_directories.length > 0) {
+                      resultHTML += `<div class="result-section">
+                                        <p class="found_directories">✅ Found Directories:</p><ul>`;
+                      resultData.found_directories.forEach(directory => {
+                          resultHTML += `<li><a href="${site}/${directory}" target="_blank">${directory}</a></li>`;
+                      });
+                      resultHTML += `</ul></div>`;
+                  }
 
-                    // Create links for not-found directories (optional)
-                    if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                        resultHTML += `<p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
-                        resultData.not_found_directories.forEach(directory => {
-                            resultHTML += `<li><span>${directory}</span></li>`; // Not clickable, just plain text
-                        });
-                        resultHTML += `</ul>`;
-                    }
+                  if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
+                      resultHTML += `<div class="result-section">
+                                        <p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
+                      resultData.not_found_directories.forEach(directory => {
+                          resultHTML += `<li><span>${directory}</span></li>`;
+                      });
+                      resultHTML += `</ul></div>`;
+                  }
 
-                    // Create links for found subdomains
-                    if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
-                        resultHTML += `<p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
-                        resultData.found_subdomains.forEach(subdomain => {
-                            resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
-                        });
-                        resultHTML += `</ul>`;
-                    }
+                  if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
+                      resultHTML += `<div class="result-section">
+                                        <p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
+                      resultData.found_subdomains.forEach(subdomain => {
+                          resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
+                      });
+                      resultHTML += `</ul></div>`;
+                  }
 
-                    // Create links for active subdomains
-                    if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
-                        resultHTML += `<p class="active_sub">🟢 Active Subdomains:</p><ul>`;
-                        resultData.active_subdomains.forEach(subdomain => {
-                            resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
-                        });
-                        resultHTML += `</ul>`;
-                    }
-                    if (resultData.extracted_links && resultData.extracted_links.length > 0) {
-                        resultHTML += `<p class="extracted_links">🔗 Extracted Links:</p><ul>`;
-                        resultData.extracted_links.forEach(link => {
-                            resultHTML += `<li>${link}<span>${link}</span></li>`;
-                        });
-                        resultHTML += `</ul>`;
-                    }
-                    resultElement.innerHTML = resultHTML;
-                };
+                  if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
+                      resultHTML += `<div class="result-section">
+                                        <p class="active_sub">🟢 Active Subdomains:</p><ul>`;
+                      resultData.active_subdomains.forEach(subdomain => {
+                          resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
+                      });
+                      resultHTML += `</ul></div>`;
+                  }
+
+                  if (resultData.extracted_links && resultData.extracted_links.length > 0) {
+                      resultHTML += `<div class="result-section">
+                                        <p class="extracted_links">🔗 Extracted Links:</p><ul>`;
+                      resultData.extracted_links.forEach(link => {
+                          resultHTML += `<li><a href="${link}" target="_blank">${link}</a></li>`;
+                      });
+                      resultHTML += `</ul></div>`;
+                  }
+
+                  resultElement.innerHTML = resultHTML;
+              };
+
 
 
                 // Periodically check for scan results
