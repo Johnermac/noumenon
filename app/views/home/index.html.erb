@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Site Scanner</title>
+  
   <style>
     body {
       background-color: #121212;
@@ -15,32 +16,48 @@
       height: 100vh;
       margin: 0;
       flex-direction: column;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .container {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 15px;
+      padding: 30px 25px;
+      width: 90%;
+      max-width: 400px;
+      min-width: 280px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
     .form-container {
       display: flex;
-      flex-direction: column; /* Change to column to stack elements vertically */
-      align-items: center;
-      gap: 15px; /* Adjust the spacing between elements */
-      width: 100%; /* Ensure the form takes up the full width */
-      max-width: 100px; /* Limit the maximum width */
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
     }
 
     .input-container {
       position: relative;
-      width: 100%; /* Double the width of the input container */
-      margin-bottom: 20px; /* Add space below the input container */
+      width: 88%;
     }
 
     input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid gray;
-      border-radius: 20px;
+      width: 88%;
+      padding: 12px 45px 12px 15px;
+      border: 1px solid #555;
+      border-radius: 25px;
       outline: none;
       font-size: 16px;
-      background-color: white; 
-      color: black;
+      background-color: #fff;
+      color: #000;
     }
 
     button {
@@ -51,17 +68,20 @@
       background: none;
       border: none;
       cursor: pointer;
+      padding: 5px;
     }
 
     button img {
       width: 20px;
       height: 20px;
-      filter: invert(0); /* Preto */
+      filter: invert(0); /* Black icon on white input */
     }
 
     .results {
       margin-top: 20px;
       text-align: left;
+      font-size: 15px;
+      word-wrap: break-word;
     }
 
     .found_directories {
@@ -80,12 +100,15 @@
       color: yellow;
     }
 
-    /* Toggle Switch CSS */
+    /* Toggle Switch */
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 60px;
-      height: 34px;
+      width: 50px;
+      height: 28px;
+      margin-right: 10px;
+      vertical-align: middle;
+      flex-shrink: 0;
     }
 
     .toggle-switch input {
@@ -101,20 +124,20 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 34px;
+      background-color: #444;
+      transition: .3s;
+      border-radius: 28px;
     }
 
     .slider:before {
       position: absolute;
       content: "";
-      height: 26px;
-      width: 26px;
+      height: 20px;
+      width: 20px;
       left: 4px;
       bottom: 4px;
       background-color: white;
-      transition: .4s;
+      transition: .3s;
       border-radius: 50%;
     }
 
@@ -123,17 +146,17 @@
     }
 
     input:checked + .slider:before {
-      transform: translateX(26px);
+      transform: translateX(22px);
     }
 
-    .label-toggle {
+    .toggle-row {
       display: flex;
       align-items: center;
-      gap: 5px;
-      flex-shrink: 0; /* Prevent the toggle from shrinking */
+      margin: 10px 0;
+      color: #ccc;
+      font-size: 14px;
     }
-  </style>
-
+</style>
 
 
 
@@ -150,17 +173,31 @@
           <img src="https://cdn-icons-png.flaticon.com/512/622/622669.png" alt="Search">
         </button>
       </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="scan-directories-toggle" name="scan_directories" unchecked>
-        <span class="slider"></span>
-      </label>
-      <span> Scan Directories</span>
 
-      <label class="toggle-switch">
-        <input type="checkbox" id="scan-subdomains-toggle" name="scan_subdomains" unchecked>
-        <span class="slider"></span>
-      </label>
-      <span> Scan Subdomains</span>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="scan-directories-toggle" name="scan_directories">
+          <span class="slider"></span>
+        </label>
+        <span>Scan Directories</span>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="scan-subdomains-toggle" name="scan_subdomains">
+          <span class="slider"></span>
+        </label>
+        <span>Scan Subdomains</span>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="scan-links-toggle" name="scan_links">
+          <span class="slider"></span>
+        </label>
+        <span>Scan Links</span>
+      </div>
+
     </form>
     <div id="result" class="results"></div> <!-- Here the results will be displayed -->
   </div>
