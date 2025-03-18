@@ -263,96 +263,106 @@
                 // Initialize flags to check if scans are complete
                 let directoriesComplete = !scanDirectories; // If scanDirectories is false, consider it complete
                 let subdomainsComplete = !scanSubdomains;   // If scanSubdomains is false, consider it complete
-                let linksComplete = !scanLinks;   // If scanLinks is false, consider it complete
+                
                 let resultData = {};
 
                 // Function to update results
                 const updateResults = () => {
                   let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
 
+                  // Found Directories
                   if (resultData.found_directories && resultData.found_directories.length > 0) {
-                      resultHTML += `<div class="result-section">
-                                        <p class="found_directories">✅ Found Directories:</p><ul>`;
-                      resultData.found_directories.forEach(directory => {
-                          resultHTML += `<li><a href="${site}/${directory}" target="_blank">${directory}</a></li>`;
-                      });
-                      resultHTML += `</ul></div>`;
+                    resultHTML += `<div class="result-section">
+                                      <p class="found_directories">✅ Found Directories:</p><ul>`;
+                    resultData.found_directories.forEach(directory => {
+                      resultHTML += `<li><a href="${site}/${directory}" target="_blank">${directory}</a></li>`;
+                    });
+                    resultHTML += `</ul></div>`;
                   }
 
+                  // Not Found Directories
                   if (resultData.not_found_directories && resultData.not_found_directories.length > 0) {
-                      resultHTML += `<div class="result-section">
-                                        <p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
-                      resultData.not_found_directories.forEach(directory => {
-                          resultHTML += `<li><span>${directory}</span></li>`;
-                      });
-                      resultHTML += `</ul></div>`;
+                    resultHTML += `<div class="result-section">
+                                      <p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
+                    resultData.not_found_directories.forEach(directory => {
+                      resultHTML += `<li><span>${directory}</span></li>`;
+                    });
+                    resultHTML += `</ul></div>`;
                   }
 
+                  // Found Subdomains
                   if (resultData.found_subdomains && resultData.found_subdomains.length > 0) {
-                      resultHTML += `<div class="result-section">
-                                        <p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
-                      resultData.found_subdomains.forEach(subdomain => {
-                          resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
-                      });
-                      resultHTML += `</ul></div>`;
+                    resultHTML += `<div class="result-section">
+                                      <p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
+                    resultData.found_subdomains.forEach(subdomain => {
+                      resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
+                    });
+                    resultHTML += `</ul></div>`;
                   }
 
+                  // Active Subdomains
                   if (resultData.active_subdomains && resultData.active_subdomains.length > 0) {
-                      resultHTML += `<div class="result-section">
-                                        <p class="active_sub">🟢 Active Subdomains:</p><ul>`;
-                      resultData.active_subdomains.forEach(subdomain => {
-                          resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
-                      });
-                      resultHTML += `</ul></div>`;
+                    resultHTML += `<div class="result-section">
+                                      <p class="active_sub">🟢 Active Subdomains:</p><ul>`;
+                    resultData.active_subdomains.forEach(subdomain => {
+                      resultHTML += `<li><a href="https://${subdomain}" target="_blank">${subdomain}</a></li>`;
+                    });
+                    resultHTML += `</ul></div>`;
                   }
 
+                  // Extracted Links
                   if (resultData.extracted_links && resultData.extracted_links.length > 0) {
-                      resultHTML += `<div class="result-section">
-                                        <p class="extracted_links">🔗 Extracted Links:</p><ul>`;
-                      resultData.extracted_links.forEach(link => {
-                          resultHTML += `<li><a href="${link}" target="_blank">${link}</a></li>`;
-                      });
-                      resultHTML += `</ul></div>`;
+                    resultHTML += `<div class="result-section">
+                                      <p class="extracted_links">🔗 Extracted Links:</p><ul>`;
+                    resultData.extracted_links.forEach(link => {
+                      resultHTML += `<li><a href="${link}" target="_blank">${link}</a></li>`;
+                    });
+                    resultHTML += `</ul></div>`;
                   }
 
                   resultElement.innerHTML = resultHTML;
-              };
-
+                };
 
 
                 // Periodically check for scan results
                 const checkResults = setInterval(async () => {
+                  try {
                     const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
+
                     if (resultResponse.ok) {
-                        const currentResultData = await resultResponse.json();
+                      const currentResultData = await resultResponse.json();
 
-                        // Merge currentResultData into resultData
-                        resultData = { ...resultData, ...currentResultData };
+                      // Merge the current results into the overall results data
+                      resultData = { ...resultData, ...currentResultData };
 
-                        // Check if directories scan is complete
-                        if (currentResultData.found_directories || currentResultData.not_found_directories) {
-                            directoriesComplete = true;
-                        }
+                      // Dynamically update the results
+                      updateResults();
 
-                        // Check if subdomains scan is complete
-                        if (currentResultData.found_subdomains || currentResultData.active_subdomains) {
-                            subdomainsComplete = true;
-                        }                  
+                      // Update completion flags based on scan status
+                      directoriesComplete = directoriesComplete || currentResultData.directories_scan_complete;
+                      subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
 
-                        // Update results if both scans are complete or if only one scan is enabled
-                        if (directoriesComplete && subdomainsComplete) {
-                            updateResults();
-                            clearInterval(checkResults); // Stop checking once results are found
-                        }
+                      // Stop polling if both directories and subdomains scans are complete
+                      if (directoriesComplete && subdomainsComplete) {
+                        clearInterval(checkResults); // Stop polling once the main scans are complete
+                        resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
+                      }
+                    } else {
+                      console.error("Failed to fetch scan results.");
                     }
+                  } catch (error) {
+                    console.error("Error fetching results:", error);
+                  }
                 }, 5000); // Check every 5 seconds
+
             } else {
                 resultElement.innerHTML = `❌ Error: ${data.error}`;
             }
         } catch (error) {
             resultElement.innerHTML = "❌ Failed to start scan.";
         }
-    });
+    });    
+
 </script>
 
 

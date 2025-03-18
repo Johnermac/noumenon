@@ -32,7 +32,7 @@ class LinksWorker
     # Set expiration for Redis keys
     REDIS.expire("links_#{site}", 30) # Expire in 30 second (for now because i'm still testing)
     
-    puts "\n  Link Results for #{site}:"
+    puts "\n  Link Results for #{url}:"
     puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?  
   end
 end

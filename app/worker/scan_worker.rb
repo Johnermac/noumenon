@@ -11,7 +11,7 @@ class ScanWorker
 
     puts "\n => RUN DIR? #{scan_directories}"
     puts "\n => RUN SUB? #{scan_subdomains}"
-    puts "\n => RUN LINKS? #{scan_links}"
+    puts "\n => RUN LINKS? #{scan_links}"    
 
     # -----------------  VALIDATE WORDLIST  ---------------------
  
@@ -98,22 +98,27 @@ class ScanWorker
   end
 
   def wait_links(site, scan_directories, scan_subdomains)
-    # Wait for directories scan to complete
-    if scan_directories
-      until REDIS.get("directories_scan_complete_#{site}") == "true"
-        puts "Waiting for directories scan to complete..."
-        sleep(5) # Check every 5 seconds
+    Thread.new do
+      # Wait for directories scan to complete
+      if scan_directories
+        until REDIS.get("directories_scan_complete_#{site}") == "true"
+          puts "Waiting for directories scan to complete..."
+          sleep(5) # Check every 5 seconds
+        end
+        puts "\n => Directories scan complete!"
       end
-    end
-
-    # Wait for subdomains scan to complete
-    if scan_subdomains
-      until REDIS.get("subdomain_scan_complete_#{site}") == "true"
-        puts "Waiting for subdomain scan to complete..."
-        sleep(5) # Check every 5 seconds
-      end
+  
+      # Wait for subdomains scan to complete
+      if scan_subdomains
+        until REDIS.get("subdomain_scan_complete_#{site}") == "true"
+          puts "Waiting for subdomains scan to complete..."
+          sleep(5) # Check every 5 seconds
+        end
+        puts "\n -> Subdomains scan complete!"
+      end  
     end
   end
+  
 
   def run_links(site, scan_directories, scan_subdomains)
     urls = []

@@ -21,7 +21,7 @@ class SubdomainWorker
        # Check the number of completed subdomains
        processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
        puts "\n---> processed_subdomains: #{processed_subdomains}, total_subdomains: #{total_subdomains}"
-       REDIS.set("subdomain_scan_complete_#{site}", "true") if processed_subdomains >= total_subdomains
+       REDIS.set("subdomain_scan_complete_#{site}", "true") if processed_subdomains >= total_subdomains       
     end
 
     # -------------------- CLEANUP --------------------

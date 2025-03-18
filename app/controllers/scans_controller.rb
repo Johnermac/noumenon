@@ -56,7 +56,7 @@ class ScansController < ApplicationController
       found_directories: found_directories,
       not_found_directories: not_found_directories,
       active_subdomains: active_subdomains,
-      extracted_links: extracted_links,
+      extracted_links: extracted_links.uniq,
       subdomain_scan_complete: subdomain_scan_complete,
       directories_scan_complete: directories_scan_complete
     }
