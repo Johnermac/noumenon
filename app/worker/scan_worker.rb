@@ -98,26 +98,42 @@ class ScanWorker
   end
 
   def wait_links(site, scan_directories, scan_subdomains)
-    Thread.new do
-      # Wait for directories scan to complete
-      if scan_directories
-        until REDIS.get("directories_scan_complete_#{site}") == "true"
-          puts "Waiting for directories scan to complete..."
-          sleep(5) # Check every 5 seconds
-        end
-        puts "\n => Directories scan complete!"
-      end
+    directories_done = !scan_directories # If not scanning directories, consider it done
+    subdomains_done = !scan_subdomains   # If not scanning subdomains, consider it done
+    start_time = Time.now                # Track start time to enforce timeout (optional)
   
-      # Wait for subdomains scan to complete
-      if scan_subdomains
-        until REDIS.get("subdomain_scan_complete_#{site}") == "true"
-          puts "Waiting for subdomains scan to complete..."
-          sleep(5) # Check every 5 seconds
+    # Periodically check status every 10 seconds
+    Thread.new do
+      loop do
+        # Check if directories scan is done
+        if scan_directories && !directories_done
+          directories_done = REDIS.get("directories_scan_complete_#{site}") == "true"
+          puts "Checking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
         end
-        puts "\n -> Subdomains scan complete!"
-      end  
+  
+        # Check if subdomains scan is done
+        if scan_subdomains && !subdomains_done
+          subdomains_done = REDIS.get("subdomain_scan_complete_#{site}") == "true"
+          puts "Checking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
+        end
+  
+        # Break the loop if both scans are complete
+        if directories_done && subdomains_done
+          puts "✅ All required scans are complete for #{site}!"
+          break
+        end
+  
+        # Optional timeout (e.g., after 5 minutes)
+        if Time.now - start_time > 300 # Timeout after 5 minutes
+          puts "❌ Timeout waiting for scans to complete!"
+          break
+        end
+  
+        sleep(30) # Pause for 10 seconds before checking again
+      end
     end
   end
+  
   
 
   def run_links(site, scan_directories, scan_subdomains)
