@@ -124,7 +124,7 @@ class ScanWorker
         end
   
         # Optional timeout (e.g., after 5 minutes)
-        if Time.now - start_time > 300 # Timeout after 5 minutes
+        if Time.now - start_time > 600 # Timeout after 5 minutes
           puts "❌ Timeout waiting for scans to complete!"
           break
         end

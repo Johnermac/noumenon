@@ -26,7 +26,7 @@ class SubdomainWorker
 
     # -------------------- CLEANUP --------------------
 
-    REDIS.expire("processed_subdomains_#{site}", 300)
-    REDIS.expire("active_subdomains_#{site}", 300)
+    REDIS.expire("processed_subdomains_#{site}", 600)
+    REDIS.expire("active_subdomains_#{site}", 600)
   end
 end
