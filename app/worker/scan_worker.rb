@@ -44,7 +44,7 @@ class ScanWorker
       total_subdomains = found_subdomains.length
       REDIS.set("subdomain_scan_complete_#{site}", false)
 
-      found_subdomains.each do |subdomain|
+      found_subdomains.each_slice(50) do |subdomain|
         SubdomainWorker.perform_async(site, subdomain, total_subdomains)
       end
 
@@ -97,6 +97,7 @@ class ScanWorker
 
   end
 
+
   def wait_links(site, scan_directories, scan_subdomains)
     directories_done = !scan_directories # If not scanning directories, consider it done
     subdomains_done = !scan_subdomains   # If not scanning subdomains, consider it done
@@ -108,24 +109,24 @@ class ScanWorker
         # Check if directories scan is done
         if scan_directories && !directories_done
           directories_done = REDIS.get("directories_scan_complete_#{site}") == "true"
-          puts "Checking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
+          puts "\nChecking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
         end
   
         # Check if subdomains scan is done
         if scan_subdomains && !subdomains_done
           subdomains_done = REDIS.get("subdomain_scan_complete_#{site}") == "true"
-          puts "Checking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
+          puts "\nChecking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
         end
   
         # Break the loop if both scans are complete
         if directories_done && subdomains_done
-          puts "✅ All required scans are complete for #{site}!"
+          puts "\n✅ All required scans are complete for #{site}!"
           break
         end
   
         # Optional timeout (e.g., after 5 minutes)
         if Time.now - start_time > 600 # Timeout after 5 minutes
-          puts "❌ Timeout waiting for scans to complete!"
+          puts "\n❌ Timeout waiting for scans to complete!"
           break
         end
   
@@ -133,7 +134,6 @@ class ScanWorker
       end
     end
   end
-  
   
 
   def run_links(site, scan_directories, scan_subdomains)

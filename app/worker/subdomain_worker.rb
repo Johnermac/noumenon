@@ -1,27 +1,44 @@
-require "httparty"
+require "typhoeus"
 require "redis"
 
 class SubdomainWorker
   include Sidekiq::Worker
 
-  def perform(site, subdomain, total_subdomains)
+  def perform(site, subdomains, total_subdomains)
     begin
-      puts "---> Performing for subdomain: #{subdomain}, total_subdomains: #{total_subdomains}"
-      response = HTTParty.get("http://#{subdomain}")
-      if response.success? || response.code.to_s.start_with?("3")
-        REDIS.sadd("active_subdomains_#{site}", subdomain)
-        puts "\n---> active-sub: #{subdomain}"
-      end     
-    rescue StandardError => e
-      puts "Error processing subdomain #{subdomain}: #{e.message}"      
-    ensure
-       # Track the total number of subdomains processed (active or inactive)
-       REDIS.incrby("processed_subdomains_#{site}", 1)
+      hydra = Typhoeus::Hydra.hydra
 
-       # Check the number of completed subdomains
-       processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
-       puts "\n---> processed_subdomains: #{processed_subdomains}, total_subdomains: #{total_subdomains}"
-       REDIS.set("subdomain_scan_complete_#{site}", "true") if processed_subdomains >= total_subdomains       
+      # Queue requests for all subdomains
+      subdomains.each do |subdomain|
+        request = Typhoeus::Request.new(
+          "http://#{subdomain}",
+          followlocation: true,
+          timeout: 5 # Short timeout to avoid long delays
+        )
+
+        # Handle response for each subdomain
+        request.on_complete do |response|
+          if response.success? || response.code.to_s.start_with?("3")
+            REDIS.sadd("active_subdomains_#{site}", subdomain)
+            puts "---> Active subdomain: #{subdomain}"          
+          end
+        end
+
+        hydra.queue(request) # Add request to Hydra queue
+      end
+
+      hydra.run
+           
+    rescue StandardError => e
+      puts "Error processing subdomains batch for #{site}: #{e.message}"   
+    ensure
+      # Track the total number of subdomains processed (active or inactive)
+      REDIS.incrby("processed_subdomains_#{site}", subdomains.size)
+
+      # Check the number of completed subdomains
+      processed_subdomains = REDIS.get("processed_subdomains_#{site}").to_i
+      puts "---> Processed subdomains: #{processed_subdomains}/#{total_subdomains}"      
+      REDIS.set("subdomain_scan_complete_#{site}", "true") if processed_subdomains >= total_subdomains       
     end
 
     # -------------------- CLEANUP --------------------
