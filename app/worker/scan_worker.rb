@@ -60,14 +60,7 @@ class ScanWorker
     # ---------------------  LINKS  ------------------------------
 
     if scan_links
-      wait_links(site, scan_directories, scan_subdomains)
-
-      urls_to_process = run_links(site, scan_directories, scan_subdomains)
-
-      # Enqueue LinksWorker for each URL
-      urls_to_process.each do |url|
-        LinksWorker.perform_async(url, site)
-      end
+      wait_links(site, scan_directories, scan_subdomains)      
     end
   end
 
@@ -130,13 +123,19 @@ class ScanWorker
           break
         end
   
-        sleep(30) # Pause for 10 seconds before checking again
+        sleep(15) # Pause for 10 seconds before checking again
+      end
+
+      if directories_done && subdomains_done
+        puts "\n => 🔗 Starting link scanning for #{site}..."
+        run_links(site, scan_directories, scan_subdomains)
       end
     end
   end
   
 
-  def run_links(site, scan_directories, scan_subdomains)
+  def run_links(site, scan_directories, scan_subdomains)    
+
     urls = []
 
     # Add directory URLs
@@ -154,6 +153,10 @@ class ScanWorker
     # Add main site URL if no directories or subdomains are scanned
     urls << "#{site}" if urls.empty?
 
-    urls
+    puts "\n => URLS: #{urls}"    
+
+    urls.each do |url|
+      LinksWorker.perform_async(url, site)
+    end
   end
 end
