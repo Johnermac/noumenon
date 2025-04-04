@@ -43,6 +43,7 @@ class ScansController < ApplicationController
 
     subdomain_scan_complete = REDIS.get("subdomain_scan_complete_#{site}") == "true"
     directories_scan_complete = REDIS.get("directories_scan_complete_#{site}") == "true"
+    link_scan_complete = REDIS.get("link_scan_complete_#{site}") == "true"
 
     # ---------- VALIDATION ----------
 
@@ -58,7 +59,8 @@ class ScansController < ApplicationController
       active_subdomains: active_subdomains,
       extracted_links: extracted_links.uniq,
       subdomain_scan_complete: subdomain_scan_complete,
-      directories_scan_complete: directories_scan_complete
+      directories_scan_complete: directories_scan_complete,
+      link_scan_complete: link_scan_complete
     }
 
     render json: combined_results
