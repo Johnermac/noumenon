@@ -155,8 +155,10 @@ class ScanWorker
 
     puts "\n => URLS: #{urls}"    
 
+    total_urls = urls.length
+
     urls.each do |url|
-      LinksWorker.perform_async(url, site)
+      LinksWorker.perform_async(url, site, total_urls)
     end
   end
 end
