@@ -5,6 +5,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   const scanDirectoriesToggle = document.getElementById("scan-directories-toggle");
   const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
   const scanLinksToggle = document.getElementById("scan-links-toggle");
+  const scanEmailsToggle = document.getElementById("scan-emails-toggle");
 
   const resultElement = document.getElementById("result");
   resultElement.innerHTML = "⌛ Scanning...";
@@ -13,6 +14,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   const scanDirectories = scanDirectoriesToggle.checked;
   const scanSubdomains = scanSubdomainsToggle.checked;
   const scanLinks = scanLinksToggle.checked;
+  const scanEmails = scanEmailsToggle.checked;
 
   if (!site) {
       resultElement.innerHTML = "❌ Please enter a site URL.";
@@ -25,7 +27,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
           headers: {
               "Content-Type": "application/json"
           },
-          body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks }) 
+          body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks, scan_emails: scanEmails }) 
       });
 
       const data = await response.json();
@@ -37,6 +39,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
           let directoriesComplete = !scanDirectories; // If scanDirectories is false, consider it complete
           let subdomainsComplete = !scanSubdomains;   // If scanSubdomains is false, consider it complete
           let linksComplete = !scanLinks;
+          let emailsComplete = !scanEmails;
           
           let resultData = {};
 
@@ -94,6 +97,16 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
               resultHTML += `</ul></div>`;
             }
 
+            // Extracted Emails
+            if (resultData.extracted_emails && resultData.extracted_emails.length > 0) {
+              resultHTML += `<div class="result-section">
+                                <p class="extracted_emails">🔵 Extracted Emails:</p><ul>`;
+              resultData.extracted_emails.forEach(email => {
+                resultHTML += `<li><span>${email}</span></li>`;
+              });
+              resultHTML += `</ul></div>`;
+            }
+
             resultElement.innerHTML = resultHTML;
           };
 
@@ -117,9 +130,10 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 directoriesComplete = directoriesComplete || currentResultData.directories_scan_complete;
                 subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
+                emailsComplete = emailsComplete || currentResultData.email_scan_complete;
 
                 // Stop polling if both directories and subdomains scans are complete
-                if (directoriesComplete && subdomainsComplete && linksComplete) {
+                if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete) {
                   clearInterval(checkResults); // Stop polling once the main scans are complete
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
                 }
