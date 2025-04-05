@@ -110,7 +110,6 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
             resultElement.innerHTML = resultHTML;
           };
 
-
           // Periodically check for scan results
           const checkResults = setInterval(async () => {
             try {
@@ -132,10 +131,14 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
 
-                // Stop polling if both directories and subdomains scans are complete
+                // Stop polling if its finished
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete) {
                   clearInterval(checkResults); // Stop polling once the main scans are complete
+                  downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
+                  
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
+
+                  
                 }
               } else {
                 console.error("Failed to fetch scan results.");
@@ -153,3 +156,19 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
       resultElement.innerHTML = `❌ Error starting scan: ${error.message}`;
   }
 });
+
+
+function downloadResultsAsTxt(filename, content) {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+

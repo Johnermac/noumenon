@@ -6,7 +6,7 @@ class ScansController < ApplicationController
     scan_directories = params[:scan_directories] || false  # Default to false if not provided
     scan_subdomains = params[:scan_subdomains] || false
     scan_links = params[:scan_links] || false    
-    scan_emails = params[:scan_emails] || false    
+    scan_emails = params[:scan_emails] || false       
 
 
     if site.blank?
