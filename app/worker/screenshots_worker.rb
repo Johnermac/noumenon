@@ -48,9 +48,10 @@ class ScreenshotsWorker
     end
 
     # ---------------------------- CLEANUP ----------------------------------------
-    # Set expiration for Redis keys
-    REDIS.expire("screenshots_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
-    
+
+    REDIS.expire("processed_screenshots_#{site}", 300)
+    REDIS.expire("screenshots_scan_complete_#{site}", 300)
+
     puts "\n  Screenshots for #{url}:"
     puts "    \t✅ Screenshot: #{url}" unless url.to_s.empty?
 
