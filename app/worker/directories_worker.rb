@@ -1,5 +1,8 @@
-require "httparty"
+#require "httparty"
 require "redis"
+require 'httpx'
+
+
 
 class DirectoriesWorker
   include Sidekiq::Worker
@@ -8,14 +11,20 @@ class DirectoriesWorker
     begin
       directories.each do |dir|
         url = "#{site}/#{dir}"        
-        response = HTTParty.get(url)
 
-        if response && (response.success? || response.code.to_s.start_with?("3"))
+        response = HTTPX.get(url, headers: {
+          "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0"
+        })
+
+        #puts "\n\n\n => #{response.status}"
+
+        if response && (response.status.to_s.start_with?("2") || response.status.to_s.start_with?("3"))
           REDIS.sadd("found_directories_#{site}", dir) unless dir.empty?
         else
           puts "Failed or error processing #{url}" unless dir.empty?
           REDIS.sadd("not_found_directories_#{site}", dir) unless dir.empty?
         end
+
 
         REDIS.incrby("processed_directories_#{site}", 1)
         

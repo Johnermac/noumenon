@@ -11,10 +11,10 @@ class ScanWorker
 
     # ---- WHATS RUNNING? -----
 
-    puts "\n => RUN DIR? #{scan_directories}"
-    puts "\n => RUN SUB? #{scan_subdomains}"
-    puts "\n => RUN LINKS? #{scan_links}"    
-    puts "\n => RUN EMAILS? #{scan_emails}"
+    puts "\n\n => RUN DIR? #{scan_directories}"
+    puts " => RUN SUB? #{scan_subdomains}"
+    puts " => RUN LINKS? #{scan_links}"    
+    puts " => RUN EMAILS? #{scan_emails}\n\n"
 
     # -----------------  VALIDATE WORDLIST  ---------------------
  
@@ -121,7 +121,7 @@ class ScanWorker
         end
   
         # Optional timeout (e.g., after 5 minutes)
-        if Time.now - start_time > 600 # Timeout after 5 minutes
+        if Time.now - start_time > 300 # Timeout after 5 minutes
           puts "\n❌ Timeout waiting for scans to complete!"
           break
         end
@@ -135,7 +135,7 @@ class ScanWorker
       end
 
       if directories_done && subdomains_done && scan_emails
-        puts "\n => @ Starting email scanning for #{site}..."
+        puts "\n => 📧 Starting email scanning for #{site}..."
         prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)
       end
     end

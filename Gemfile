@@ -57,6 +57,9 @@ group :development do
   gem "redis"
   gem "nokogiri"
   gem "typhoeus"
+  gem "httpx"
+
+  
 
   # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
   # gem "rack-mini-profiler"

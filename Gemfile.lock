@@ -111,10 +111,13 @@ GEM
     ffi (1.17.1)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    http-2 (1.0.2)
     httparty (0.22.0)
       csv
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
+    httpx (1.4.4)
+      http-2 (>= 1.0.0)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.0.3)
@@ -285,6 +288,7 @@ DEPENDENCIES
   capybara
   debug
   httparty
+  httpx
   importmap-rails
   jbuilder
   nokogiri
