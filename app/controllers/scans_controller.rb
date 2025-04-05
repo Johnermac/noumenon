@@ -51,9 +51,11 @@ class ScansController < ApplicationController
 
     # ---------- VALIDATION ----------
 
-    if found_directories.empty? && not_found_directories.empty? && found_subdomains.nil? && active_subdomains.empty? && extracted_links.empty? && extracted_emails.empty?
-      render json: { error: "No results found for #{site}" }, status: :not_found
-      return
+    if subdomain_scan_complete && directories_scan_complete && link_scan_complete && email_scan_complete && screenshot_scan_complete &&
+      found_directories.empty? && not_found_directories.empty? && found_subdomains.nil? &&
+      active_subdomains.empty? && extracted_links.empty? && extracted_emails.empty?
+        render json: { error: "No results found for #{site}" }, status: :not_found
+        return
     end
 
     combined_results = {
@@ -67,8 +69,10 @@ class ScansController < ApplicationController
       directories_scan_complete: directories_scan_complete,
       link_scan_complete: link_scan_complete,
       email_scan_complete: email_scan_complete,
-      screenshot_scan_complete: screenshot_scan_complete
+      screenshot_scan_complete: screenshot_scan_complete      
     }
+
+    #puts "\n\n=>>>> screenshot_scan_complete for #{site}: #{screenshot_scan_complete}"
 
     render json: combined_results
   end

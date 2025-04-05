@@ -8,7 +8,7 @@ class ScreenshotsWorker
   def perform(url, site, total_urls)
     begin         
       response = HTTParty.get(url, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" })
-
+      browser = nil
 
       if response.success?
         browser = Watir::Browser.new :firefox, headless: true
@@ -22,7 +22,11 @@ class ScreenshotsWorker
 
         sleep 5        
 
-        filename = url.gsub(%r{https?://}, '').gsub(/[^\w\-]+/, '_').gsub(/^_+|_+$/, '') + '.png'
+        filename = url.gsub(%r{https?://}, '')
+              .gsub(/[^\w\-]+/, '_')
+              .gsub(/^_+|_+$/, '')
+              .downcase + '.png'
+
 
         path = File.join(output_dir, filename)
         browser.screenshot.save(path)
@@ -50,7 +54,9 @@ class ScreenshotsWorker
     # ---------------------------- CLEANUP ----------------------------------------
 
     REDIS.expire("processed_screenshots_#{site}", 300)
-    REDIS.expire("screenshots_scan_complete_#{site}", 300)
+    REDIS.expire("screenshot_scan_complete_#{site}", 300)
+    CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
+
 
     puts "\n  Screenshots for #{url}:"
     puts "    \t✅ Screenshot: #{url}" unless url.to_s.empty?

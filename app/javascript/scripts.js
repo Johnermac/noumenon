@@ -128,6 +128,8 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 // Merge the current results into the overall results data
                 resultData = { ...resultData, ...currentResultData };
 
+                console.log("Polling result:", currentResultData);
+
                 // Dynamically update the results
                 updateResults();
 
@@ -137,6 +139,9 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
                 screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;
+
+                
+
 
                 // Stop polling if its finished
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {
@@ -148,7 +153,9 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                   
                 }
               } else {
-                console.error("Failed to fetch scan results.");
+                const errorText = await resultResponse.text();
+                console.error(`❌ Fetch failed: ${resultResponse.status} ${resultResponse.statusText}\n${errorText}`);
+    
               }
             } catch (error) {
               console.error("Error fetching results:", error);

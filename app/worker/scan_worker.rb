@@ -117,7 +117,7 @@ class ScanWorker
   
         # Break the loop if both scans are complete
         if directories_done && subdomains_done
-          puts "\n✅ All required scans are complete for #{site}!"
+          puts "\n✅ All main scans are complete for #{site}!"
           break
         end
   
