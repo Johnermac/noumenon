@@ -136,7 +136,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
-                screenshotsComplete = screenshotsComplete || currentResultData.email_screenshot_complete;
+                screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;
 
                 // Stop polling if its finished
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {

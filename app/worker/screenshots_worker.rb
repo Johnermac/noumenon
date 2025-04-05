@@ -27,7 +27,7 @@ class ScreenshotsWorker
         path = File.join(output_dir, filename)
         browser.screenshot.save(path)
 
-        REDIS.sadd("screenshots_#{site}", url) unless url.empty?
+        #REDIS.sadd("screenshots_#{site}", url) unless url.empty?
         puts "---> Screenshot taken from #{url}: #{url.size}"
 
         
@@ -49,7 +49,7 @@ class ScreenshotsWorker
 
     # ---------------------------- CLEANUP ----------------------------------------
     # Set expiration for Redis keys
-    REDIS.expire("emails_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
+    REDIS.expire("screenshots_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
     
     puts "\n  Screenshots for #{url}:"
     puts "    \t✅ Screenshot: #{url}" unless url.to_s.empty?
