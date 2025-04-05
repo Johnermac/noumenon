@@ -58,6 +58,9 @@ group :development do
   gem "nokogiri"
   gem "typhoeus"
   gem "httpx"
+  gem 'selenium-webdriver', '= 4.7.1'
+  gem 'watir', '= 7.2.2'
+  gem 'zip'
 
   
 
@@ -70,6 +73,5 @@ end
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem "capybara"
-  gem "selenium-webdriver"
+  gem "capybara"  
 end

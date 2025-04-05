@@ -6,6 +6,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   const scanSubdomainsToggle = document.getElementById("scan-subdomains-toggle");
   const scanLinksToggle = document.getElementById("scan-links-toggle");
   const scanEmailsToggle = document.getElementById("scan-emails-toggle");
+  const scanScreenshotsToggle = document.getElementById("scan-screenshots-toggle");
 
   const resultElement = document.getElementById("result");
   resultElement.innerHTML = "⌛ Scanning...";
@@ -15,6 +16,8 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   const scanSubdomains = scanSubdomainsToggle.checked;
   const scanLinks = scanLinksToggle.checked;
   const scanEmails = scanEmailsToggle.checked;
+  const scanScreenshots = scanScreenshotsToggle.checked;
+
 
   if (!site) {
       resultElement.innerHTML = "❌ Please enter a site URL.";
@@ -27,7 +30,9 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
           headers: {
               "Content-Type": "application/json"
           },
-          body: JSON.stringify({ site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks, scan_emails: scanEmails }) 
+          body: JSON.stringify({ 
+            site: site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks, scan_emails: scanEmails, scan_screenshots: scanScreenshots 
+          }) 
       });
 
       const data = await response.json();
@@ -40,6 +45,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
           let subdomainsComplete = !scanSubdomains;   // If scanSubdomains is false, consider it complete
           let linksComplete = !scanLinks;
           let emailsComplete = !scanEmails;
+          let screenshotsComplete = !scanScreenshots;
           
           let resultData = {};
 
@@ -130,12 +136,13 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
+                screenshotsComplete = screenshotsComplete || currentResultData.email_screenshot_complete;
 
                 // Stop polling if its finished
-                if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete) {
+                if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {
                   clearInterval(checkResults); // Stop polling once the main scans are complete
                   downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
-                  
+
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
 
                   

@@ -7,14 +7,15 @@ class ScanWorker
   include HTTParty
   include Sidekiq::Worker  
 
-  def perform(site, scan_directories, scan_subdomains, scan_links, scan_emails)
+  def perform(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
 
     # ---- WHATS RUNNING? -----
 
     puts "\n\n => RUN DIR? #{scan_directories}"
     puts " => RUN SUB? #{scan_subdomains}"
     puts " => RUN LINKS? #{scan_links}"    
-    puts " => RUN EMAILS? #{scan_emails}\n\n"
+    puts " => RUN EMAILS? #{scan_emails}"
+    puts " => RUN SCREENSHOT? #{scan_screenshots}\n\n"
 
     # -----------------  VALIDATE WORDLIST  ---------------------
  
@@ -60,10 +61,10 @@ class ScanWorker
 
     end
 
-    # ---------------------  LINKS & EMAILS  ------------------------------
+    # ---------------------  LINKS || EMAILS || SCREENSHOTS ------------------------------
 
-    if scan_links || scan_emails
-      wait_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)      
+    if scan_links || scan_emails || scan_screenshots
+      wait_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)      
     end    
   end
 
@@ -94,7 +95,7 @@ class ScanWorker
   end
 
 
-  def wait_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)
+  def wait_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
     directories_done = !scan_directories # If not scanning directories, consider it done
     subdomains_done = !scan_subdomains   # If not scanning subdomains, consider it done
     start_time = Time.now                # Track start time to enforce timeout (optional)
@@ -129,20 +130,31 @@ class ScanWorker
         sleep(15) # Pause for 10 seconds before checking again
       end
 
+      # ===> SEND TO SCAN LINKS
+
       if directories_done && subdomains_done && scan_links
         puts "\n => 🔗 Starting link scanning for #{site}..."
-        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)
+        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
       end
+
+      # ===> SEND TO SCAN EMAILS
 
       if directories_done && subdomains_done && scan_emails
         puts "\n => 📧 Starting email scanning for #{site}..."
-        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)
+        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
+      end
+
+      # ===> SEND TO SCAN PRINTS
+
+      if directories_done && subdomains_done && scan_screenshots
+        puts "\n => 📷 Starting screenshots for #{site}..."
+        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
       end
     end
   end
   
 
-  def prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails)    
+  def prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)    
 
     urls = []
 
@@ -167,7 +179,8 @@ class ScanWorker
 
     urls.each do |url|
       LinksWorker.perform_async(url, site, total_urls) if scan_links  
-      EmailsWorker.perform_async(url, site, total_urls) if scan_emails     
+      EmailsWorker.perform_async(url, site, total_urls) if scan_emails  
+      ScreenshotsWorker.perform_async(url, site, total_urls) if scan_screenshots    
     end
   end
 end

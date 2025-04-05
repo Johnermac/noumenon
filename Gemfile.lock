@@ -228,9 +228,7 @@ GEM
     rexml (3.4.1)
     rubyzip (2.4.1)
     securerandom (0.3.2)
-    selenium-webdriver (4.26.0)
-      base64 (~> 0.2)
-      logger (~> 1.4)
+    selenium-webdriver (4.7.1)
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
@@ -263,6 +261,9 @@ GEM
       ethon (>= 0.9.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    watir (7.2.2)
+      regexp_parser (>= 1.2, < 3)
+      selenium-webdriver (~> 4.2)
     web-console (4.2.1)
       actionview (>= 6.0.0)
       activemodel (>= 6.0.0)
@@ -276,6 +277,7 @@ GEM
     xpath (3.2.0)
       nokogiri (~> 1.8)
     zeitwerk (2.6.18)
+    zip (2.0.2)
 
 PLATFORMS
   arm64-darwin
@@ -295,7 +297,7 @@ DEPENDENCIES
   puma (>= 5.0)
   rails (~> 7.1.5, >= 7.1.5.1)
   redis
-  selenium-webdriver
+  selenium-webdriver (= 4.7.1)
   sidekiq
   sprockets-rails
   sqlite3 (>= 1.4)
@@ -303,7 +305,9 @@ DEPENDENCIES
   turbo-rails
   typhoeus
   tzinfo-data
+  watir (= 7.2.2)
   web-console
+  zip
 
 RUBY VERSION
    ruby 3.0.2p107
