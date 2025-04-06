@@ -72,8 +72,6 @@ class ScansController < ApplicationController
       screenshot_scan_complete: screenshot_scan_complete      
     }
 
-    puts "\n\n\t scan complete for #{site}"
-
     render json: combined_results
   end
 end

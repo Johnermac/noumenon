@@ -17,22 +17,23 @@ class EmailsWorker
         valid_emails = text.scan(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i).uniq
 
         REDIS.sadd("emails_#{site}", valid_emails) unless valid_emails.empty?
-        puts "---> Emails extracted from #{url}: #{valid_emails.size}"
+        # puts "---> Emails extracted from #{url}: #{valid_emails.size}"
 
+        # Track the total number of emails processed
+        REDIS.incrby("processed_emails_#{site}", 1)
+
+        # Check the number of completed emails
+        processed_emails = REDIS.get("processed_emails_#{site}").to_i
+        puts "---> processed emails: #{processed_emails}/#{total_urls}" 
         
       else
         puts "Failed to fetch URL: #{url} - Response Code: #{response.code}"
       end            
     rescue StandardError => e
       puts "Error during email scan: #{e.message}"    
-    ensure
-      # Track the total number of emails processed
-      REDIS.incrby("processed_emails_#{site}", 1)
-
-      # Check the number of completed emails
+    ensure            
       processed_emails = REDIS.get("processed_emails_#{site}").to_i
-      puts "---> processed emails: #{processed_emails}/#{total_urls}" 
-           
+
       if processed_emails >= total_urls
         REDIS.set("email_scan_complete_#{site}", "true") 
         # ---------------------------- CLEANUP ----------------------------------------

@@ -181,7 +181,7 @@ class ScanWorker
       LinksWorker.perform_async(url, site, total_urls) if scan_links  
       EmailsWorker.perform_async(url, site, total_urls) if scan_emails  
     end
-
+    
     ScreenshotsWorker.perform_async(urls, site) if scan_screenshots    
 
   end

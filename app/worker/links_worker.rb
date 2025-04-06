@@ -18,22 +18,20 @@ class LinksWorker
         valid_links = links.select { |link| link.start_with?('http://', 'https://') }
 
         REDIS.sadd("links_#{site}", valid_links) unless valid_links.empty?
-        puts "---> Links extracted from #{url}: #{valid_links.size}"
+        # puts "---> Links extracted from #{url}: #{valid_links.size}"
 
+        
+        REDIS.incrby("processed_links_#{site}", 1)        
+        processed_links = REDIS.get("processed_links_#{site}").to_i
+        puts "---> processed links: #{processed_links}/#{total_urls}" 
         
       else
         puts "Failed to fetch URL: #{url} - Response Code: #{response.code}"
       end            
     rescue StandardError => e
       puts "Error during link scan: #{e.message}"    
-    ensure
-      # Track the total number of links processed
-      REDIS.incrby("processed_links_#{site}", 1)
-
-      # Check the number of completed links
-      processed_links = REDIS.get("processed_links_#{site}").to_i
-      puts "---> processed links: #{processed_links}/#{total_urls}" 
-           
+    ensure           
+      processed_links = REDIS.get("processed_links_#{site}").to_i     
       if processed_links >= total_urls
         REDIS.set("link_scan_complete_#{site}", "true") 
         # ---------------------------- CLEANUP ----------------------------------------

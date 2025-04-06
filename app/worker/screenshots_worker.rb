@@ -1,3 +1,5 @@
+# sudo apt install chromium-driver
+
 require "watir"
 require "fileutils"
 
@@ -8,44 +10,63 @@ class ScreenshotsWorker
     browser = nil
 
     begin
-      browser = Watir::Browser.new :firefox, headless: true
+      browser = Watir::Browser.new :chrome, options: {
+        args: ['--disable-gpu', '--no-sandbox']
+      }
+        # '--headless', 
+          
 
       sitestrip = site.gsub(%r{https?://(www\.)?}, "").gsub(/(www\.)?/, "")
       output_dir = Rails.root.join("tmp", "screenshots", sitestrip)
       FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
 
-      urls.each do |url|
-        begin
-          browser.goto(url)
-          sleep 5
+      urls.each do |url|        
 
-          filename = url.gsub(%r{https?://}, '')
-                        .gsub(/[^\w\-]+/, '_')
-                        .gsub(/^_+|_+$/, '')
-                        .downcase + '.png'
+        3.times do
+          begin
+            browser.goto(url)
+            break
+          rescue => e
+            puts "Retrying... #{e.message}"
+            sleep 2
+          end
+        end          
+        
+        sleep 10
 
-          path = File.join(output_dir, filename)
-          browser.screenshot.save(path)
+        filename = url.gsub(%r{https?://}, '')
+                      .gsub(/[^\w\-]+/, '_')
+                      .gsub(/^_+|_+$/, '')
+                      .downcase + '.png'
 
-          puts "---> Screenshot saved for #{url}"
-        rescue => e
-          puts "❌ Screenshot error for #{url}: #{e.message}"
-        end
+        path = File.join(output_dir, filename)
+        browser.screenshot.save(path)
+
+        browser.goto("about:blank")
+
+        #puts "---> Screenshot saved for #{url}"
+
+        REDIS.incrby("processed_screenshots_#{site}", 1)
+        processed_screenshots = REDIS.get("processed_screenshots_#{site}").to_i
+        puts "---> processed screenshot: #{processed_screenshots}/#{urls.length}" 
+       
       end
 
     rescue => e
-      puts "❌ Error during screenshot process: #{e.message}"
+      puts "❌ Screenshot error for #{url}: #{e.message}"
 
     ensure
-      browser&.close
+      processed_screenshots = REDIS.get("processed_screenshots_#{site}").to_i
+      if processed_screenshots >= urls.length
 
-      # Mark scan complete for this site
-      REDIS.set("screenshot_scan_complete_#{site}", "true")
-      REDIS.expire("screenshot_scan_complete_#{site}", 300)
+        browser&.close        
+        REDIS.set("screenshot_scan_complete_#{site}", "true")
+        REDIS.expire("processed_screenshots_#{site}", 300)
+        REDIS.expire("screenshot_scan_complete_#{site}", 300)
+        CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
 
-      CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
-
-      puts "\n\t✅ All screenshots complete for #{site}"
+        puts "\n\t✅ All screenshots complete for #{site}"
+      end
     end
   end
 end
