@@ -32,17 +32,18 @@ class LinksWorker
 
       # Check the number of completed links
       processed_links = REDIS.get("processed_links_#{site}").to_i
-      puts "---> processed links: #{processed_links}/#{total_urls}"      
-      REDIS.set("link_scan_complete_#{site}", "true") if processed_links >= total_urls
-    end
-
-    # ---------------------------- CLEANUP ----------------------------------------
-    # Set expiration for Redis keys
-    REDIS.expire("links_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
-    REDIS.expire("processed_links_#{site}", 300)
-    REDIS.expire("links_scan_complete_#{site}", 300)
-    
-    puts "\n  Link Results for #{url}:"
-    puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?  
+      puts "---> processed links: #{processed_links}/#{total_urls}" 
+           
+      if processed_links >= total_urls
+        REDIS.set("link_scan_complete_#{site}", "true") 
+        # ---------------------------- CLEANUP ----------------------------------------
+        REDIS.expire("links_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
+        REDIS.expire("processed_links_#{site}", 300)
+        REDIS.expire("links_scan_complete_#{site}", 300)
+        
+        puts "\n  Link Results for #{url}:"
+        puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?  
+      end
+    end    
   end
 end

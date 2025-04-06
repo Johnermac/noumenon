@@ -1,65 +1,51 @@
-require "httparty"
 require "watir"
-require "zip"
+require "fileutils"
 
 class ScreenshotsWorker
   include Sidekiq::Worker
 
-  def perform(url, site, total_urls)
-    begin         
-      response = HTTParty.get(url, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" })
-      browser = nil
+  def perform(urls, site)
+    browser = nil
 
-      if response.success?
-        browser = Watir::Browser.new :firefox, headless: true
-        browser.goto(url)
+    begin
+      browser = Watir::Browser.new :firefox, headless: true
 
-        # DIR TO SAVE SCREENSHOTS
+      sitestrip = site.gsub(%r{https?://(www\.)?}, "").gsub(/(www\.)?/, "")
+      output_dir = Rails.root.join("tmp", "screenshots", sitestrip)
+      FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
 
-        sitestrip = site.gsub(/https?:\/\/(www\.)?/, "").gsub(/(www\.)?/, "")
-        output_dir = Rails.root.join("tmp", "screenshots", sitestrip)
-        FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
+      urls.each do |url|
+        begin
+          browser.goto(url)
+          sleep 5
 
-        sleep 5        
+          filename = url.gsub(%r{https?://}, '')
+                        .gsub(/[^\w\-]+/, '_')
+                        .gsub(/^_+|_+$/, '')
+                        .downcase + '.png'
 
-        filename = url.gsub(%r{https?://}, '')
-              .gsub(/[^\w\-]+/, '_')
-              .gsub(/^_+|_+$/, '')
-              .downcase + '.png'
+          path = File.join(output_dir, filename)
+          browser.screenshot.save(path)
 
+          puts "---> Screenshot saved for #{url}"
+        rescue => e
+          puts "❌ Screenshot error for #{url}: #{e.message}"
+        end
+      end
 
-        path = File.join(output_dir, filename)
-        browser.screenshot.save(path)
+    rescue => e
+      puts "❌ Error during screenshot process: #{e.message}"
 
-        #REDIS.sadd("screenshots_#{site}", url) unless url.empty?
-        puts "---> Screenshot taken from #{url}: #{url.size}"
-
-        
-      else
-        puts "Failed to fetch URL: #{url} - Response Code: #{response.code}"
-      end            
-    rescue StandardError => e
-      puts "Error during screenshot: #{e.message}"    
     ensure
       browser&.close
-      # Track the total number of screenshots processed
-      REDIS.incrby("processed_screenshots_#{site}", 1)
 
-      # Check the number of completed screenshots
-      processed_screenshots = REDIS.get("processed_screenshots_#{site}").to_i
-      puts "---> processed screenshots: #{processed_screenshots}/#{total_urls}"      
-      REDIS.set("screenshot_scan_complete_#{site}", "true") if processed_screenshots >= total_urls
+      # Mark scan complete for this site
+      REDIS.set("screenshot_scan_complete_#{site}", "true")
+      REDIS.expire("screenshot_scan_complete_#{site}", 300)
+
+      CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
+
+      puts "\n\t✅ All screenshots complete for #{site}"
     end
-
-    # ---------------------------- CLEANUP ----------------------------------------
-
-    REDIS.expire("processed_screenshots_#{site}", 300)
-    REDIS.expire("screenshot_scan_complete_#{site}", 300)
-    CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
-
-
-    puts "\n  Screenshots for #{url}:"
-    puts "    \t✅ Screenshot: #{url}" unless url.to_s.empty?
-
   end
 end

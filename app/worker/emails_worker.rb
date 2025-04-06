@@ -31,17 +31,19 @@ class EmailsWorker
 
       # Check the number of completed emails
       processed_emails = REDIS.get("processed_emails_#{site}").to_i
-      puts "---> processed emails: #{processed_emails}/#{total_urls}"      
-      REDIS.set("email_scan_complete_#{site}", "true") if processed_emails >= total_urls
-    end
-
-    # ---------------------------- CLEANUP ----------------------------------------
-    # Set expiration for Redis keys
-    REDIS.expire("emails_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
-    REDIS.expire("processed_emails_#{site}", 300)
-    REDIS.expire("emails_scan_complete_#{site}", 300)
-    
-    puts "\n  Email Results for #{url}:"
-    puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any?  
+      puts "---> processed emails: #{processed_emails}/#{total_urls}" 
+           
+      if processed_emails >= total_urls
+        REDIS.set("email_scan_complete_#{site}", "true") 
+        # ---------------------------- CLEANUP ----------------------------------------
+        # Set expiration for Redis keys
+        REDIS.expire("emails_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
+        REDIS.expire("processed_emails_#{site}", 300)
+        REDIS.expire("emails_scan_complete_#{site}", 300)
+        
+        puts "\n  Email Results for #{url}:"
+        puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any? 
+      end
+    end     
   end
 end
