@@ -41,9 +41,7 @@ class ScanWorker
     if scan_subdomains
       found_subdomains = []
 
-      found_subdomains = run_subdomains(site)
-
-      #found_subdomains = found_subdomains || []
+      found_subdomains = run_subdomains(site)      
 
       total_subdomains = found_subdomains.length
       REDIS.set("subdomain_scan_complete_#{site}", false)
@@ -56,8 +54,7 @@ class ScanWorker
       REDIS.expire("scan_results_#{site}_subdomains", 10)
 
       puts "\n  Scan Results for #{site}:"
-      puts "    \t🟡 Found Subdomains: #{found_subdomains.join(', ')}" if found_subdomains.any?
-      #puts "    \t🟢 Active Subdomains: #{active_subdomains.join(', ')}\n" if active_subdomains.any?      
+      puts "    \t🟡 Found Subdomains: #{found_subdomains.join(', ')}" if found_subdomains.any?           
 
     end
 
@@ -106,20 +103,17 @@ class ScanWorker
         # Check if directories scan is done
         if scan_directories && !directories_done
           directories_done = REDIS.get("directories_scan_complete_#{site}") == "true"
-          puts "\nChecking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
+          puts "\n => Checking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
         end
   
         # Check if subdomains scan is done
         if scan_subdomains && !subdomains_done
           subdomains_done = REDIS.get("subdomain_scan_complete_#{site}") == "true"
-          puts "\nChecking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
+          puts "\n => Checking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
         end
   
         # Break the loop if both scans are complete
-        if directories_done && subdomains_done
-          puts "\n✅ All main scans are complete for #{site}!"
-          break
-        end
+        break if directories_done && subdomains_done          
   
         # Optional timeout (e.g., after 5 minutes)
         if Time.now - start_time > 300 # Timeout after 5 minutes
@@ -132,24 +126,15 @@ class ScanWorker
 
       # ===> SEND TO SCAN LINKS
 
-      if directories_done && subdomains_done && scan_links
-        puts "\n => 🔗 Starting link scanning for #{site}..."
+      if directories_done && subdomains_done && (scan_links || scan_emails || scan_screenshots)        
+        
+        puts "\n\t   🔗 Links Scan..." if scan_links
+        puts "\n\t   📧 Emails Scan..." if scan_emails
+        puts "\n\t   📷 Screenshots..." if scan_screenshots
+      
         prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
       end
-
-      # ===> SEND TO SCAN EMAILS
-
-      if directories_done && subdomains_done && scan_emails
-        puts "\n => 📧 Starting email scanning for #{site}..."
-        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
-      end
-
-      # ===> SEND TO SCAN PRINTS
-
-      if directories_done && subdomains_done && scan_screenshots
-        puts "\n => 📷 Starting screenshots for #{site}..."
-        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
-      end
+      
     end
   end
   
@@ -170,19 +155,18 @@ class ScanWorker
       urls += active_subdomains.map { |sub| "http://#{sub}" } if active_subdomains.any?
     end
 
-    # Add main site URL if no directories or subdomains are scanned
-    urls << "#{site}" if urls.empty?
+    # Add main site URL
+    urls << "#{site}"
 
     #puts "\n => URLS: #{urls}"    
 
     total_urls = urls.length
 
+    ScreenshotsWorker.perform_async(urls, site) if scan_screenshots
+
     urls.each do |url|
       LinksWorker.perform_async(url, site, total_urls) if scan_links  
       EmailsWorker.perform_async(url, site, total_urls) if scan_emails  
     end
-    
-    ScreenshotsWorker.perform_async(urls, site) if scan_screenshots    
-
   end
 end
