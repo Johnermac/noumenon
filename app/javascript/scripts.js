@@ -160,7 +160,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
             } catch (error) {
               console.error("Error fetching results:", error);
             }
-          }, 5000); // Check every 5 seconds
+          }, 10000); // Check every 10 seconds
 
       } else {
           resultElement.innerHTML = `❌ Error: ${data.error}`;

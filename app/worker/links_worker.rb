@@ -31,17 +31,23 @@ class LinksWorker
     rescue StandardError => e
       puts "Error during link scan: #{e.message}"    
     ensure           
-      processed_links = REDIS.get("processed_links_#{site}").to_i     
-      if processed_links >= total_urls
-        REDIS.set("link_scan_complete_#{site}", "true") 
-        # ---------------------------- CLEANUP ----------------------------------------
-        REDIS.expire("links_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
-        REDIS.expire("processed_links_#{site}", 300)
-        REDIS.expire("links_scan_complete_#{site}", 300)
-        
-        puts "\n  Link Results for #{url}:"
-        puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?  
-      end
+      processed_links = REDIS.get("processed_links_#{site}").to_i   
+      cleanup_links(site, valid_links) if processed_links >= total_urls      
     end    
+  end
+
+  private
+
+  def cleanup_links(site, valid_links)
+    REDIS.set("link_scan_complete_#{site}", "true") 
+
+    # ---------------------------- CLEANUP ----------------------------------------
+
+    REDIS.expire("links_#{site}", 600) 
+    REDIS.expire("processed_links_#{site}", 300)
+    REDIS.expire("links_scan_complete_#{site}", 300)
+    
+    puts "\n  Link Results for #{url}:"
+    puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?
   end
 end

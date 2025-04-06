@@ -2,6 +2,7 @@
 
 require "watir"
 require "fileutils"
+require "zip"
 
 class ScreenshotsWorker
   include Sidekiq::Worker
@@ -11,9 +12,8 @@ class ScreenshotsWorker
 
     begin
       browser = Watir::Browser.new :chrome, options: {
-        args: ['--disable-gpu', '--no-sandbox']
-      }
-        # '--headless', 
+        args: ['--headless', '--disable-gpu', '--no-sandbox']
+      }         
           
 
       sitestrip = site.gsub(%r{https?://(www\.)?}, "").gsub(/(www\.)?/, "")
@@ -58,15 +58,28 @@ class ScreenshotsWorker
     ensure
       processed_screenshots = REDIS.get("processed_screenshots_#{site}").to_i
       if processed_screenshots >= urls.length
-
         browser&.close        
-        REDIS.set("screenshot_scan_complete_#{site}", "true")
-        REDIS.expire("processed_screenshots_#{site}", 300)
-        REDIS.expire("screenshot_scan_complete_#{site}", 300)
-        CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
-
-        puts "\n\t✅ All screenshots complete for #{site}"
+        cleanup_screenshot(site)
       end
     end
   end
+
+  private
+
+  def cleanup_screenshot(site)
+    REDIS.set("screenshot_scan_complete_#{site}", "true")
+    REDIS.expire("processed_screenshots_#{site}", 300)
+    REDIS.expire("screenshot_scan_complete_#{site}", 300)
+
+    zip_screenshot(site)
+
+    CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
+
+    puts "\n\t✅ All screenshots complete for #{site}"
+  end
+
+  def zip_screenshot(site)
+
+  end
+
 end

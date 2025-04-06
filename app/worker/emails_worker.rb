@@ -33,18 +33,22 @@ class EmailsWorker
       puts "Error during email scan: #{e.message}"    
     ensure            
       processed_emails = REDIS.get("processed_emails_#{site}").to_i
-
-      if processed_emails >= total_urls
-        REDIS.set("email_scan_complete_#{site}", "true") 
-        # ---------------------------- CLEANUP ----------------------------------------
-        # Set expiration for Redis keys
-        REDIS.expire("emails_#{site}", 600) # Expire in 30 second (for now because i'm still testing)
-        REDIS.expire("processed_emails_#{site}", 300)
-        REDIS.expire("emails_scan_complete_#{site}", 300)
-        
-        puts "\n  Email Results for #{url}:"
-        puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any? 
-      end
+      cleanup_emails(site, valid_emails) if processed_emails >= total_urls      
     end     
+  end
+
+  private
+
+  def cleanup_emails(site, valid_emails)
+    REDIS.set("email_scan_complete_#{site}", "true") 
+
+    # ---------------------------- CLEANUP ----------------------------------------
+
+    REDIS.expire("emails_#{site}", 600)
+    REDIS.expire("processed_emails_#{site}", 300)
+    REDIS.expire("emails_scan_complete_#{site}", 300)
+    
+    puts "\n  Email Results for #{url}:"
+    puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any? 
   end
 end
