@@ -69,17 +69,14 @@ class ScreenshotsWorker
   def cleanup_screenshot(site)
     REDIS.set("screenshot_scan_complete_#{site}", "true")
     REDIS.expire("processed_screenshots_#{site}", 300)
-    REDIS.expire("screenshot_scan_complete_#{site}", 300)
+    REDIS.expire("screenshot_scan_complete_#{site}", 300)    
 
-    zip_screenshot(site)
-
+    CleanupScreenshotsFolderWorker.zip_screenshot(site)
     CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
 
     puts "\n\t✅ All screenshots complete for #{site}"
   end
 
-  def zip_screenshot(site)
-
-  end
+  
 
 end

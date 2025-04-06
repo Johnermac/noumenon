@@ -61,8 +61,8 @@ group :development do
   gem 'selenium-webdriver', '= 4.7.1'
   gem 'watir', '= 7.2.2'
   gem 'zip'
-
-  
+  gem 'securerandom'
+  gem 'shellwords'
 
   # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
   # gem "rack-mini-profiler"
