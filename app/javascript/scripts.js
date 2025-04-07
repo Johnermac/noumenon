@@ -147,6 +147,7 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {
                   clearInterval(checkResults); // Stop polling once the main scans are complete
                   downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
+                  downloadScreenshotZip(site);                  
 
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
 
@@ -183,6 +184,28 @@ function downloadResultsAsTxt(filename, content) {
   a.click();
   a.remove();
 
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(url);  
+}
+
+function downloadScreenshotZip(site) {
+  fetch(`/download/screenshot_zip_info?site=${encodeURIComponent(site)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.zip_ready) {
+        const password = data.password;        
+        alert(`🗝️ ZIP Password: ${data.password}`);
+
+        // Trigger download
+        const a = document.createElement("a");
+        a.href = `/download/screenshot_zip?site=${encodeURIComponent(site)}`;
+        a.download = `${site}_screenshots.zip`;
+        a.click();
+      } else {
+        console.warn("⏳ Zip not ready yet.");
+      }
+    })
+    .catch(err => {
+      console.error("❌ Failed to fetch zip info:", err);
+    });
 }
 

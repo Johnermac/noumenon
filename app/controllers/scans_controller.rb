@@ -38,7 +38,8 @@ class ScansController < ApplicationController
 
     # ---------- EMAILS ---------------
 
-    extracted_emails = REDIS.smembers("emails_#{site}")
+    extracted_emails = REDIS.smembers("emails_#{site}")   
+
 
     # ---------- STATUS --------------
 
@@ -69,9 +70,10 @@ class ScansController < ApplicationController
       directories_scan_complete: directories_scan_complete,
       link_scan_complete: link_scan_complete,
       email_scan_complete: email_scan_complete,
-      screenshot_scan_complete: screenshot_scan_complete      
-    }
+      screenshot_scan_complete: screenshot_scan_complete     
+    }    
+
 
     render json: combined_results
-  end
+  end  
 end
