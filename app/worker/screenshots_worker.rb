@@ -12,8 +12,17 @@ class ScreenshotsWorker
 
     begin
       browser = Watir::Browser.new :chrome, options: {
-        args: ['--headless', '--disable-gpu', '--no-sandbox']
-      }         
+        args: [
+          '--headless',
+          '--disable-gpu',
+          '--no-sandbox',
+          '--window-size=1280,720',
+          '--disable-blink-features=AutomationControlled',          
+          '--disable-dev-shm-usage',
+          '--ignore-certificate-errors',
+          '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36'
+        ]
+      }        
           
 
       sitestrip = site.gsub(%r{https?://(www\.)?}, "").gsub(/(www\.)?/, "")
@@ -32,7 +41,9 @@ class ScreenshotsWorker
           end
         end          
         
-        sleep 10
+        #sleep 5
+        # Check if page finished loading
+        browser.body.wait_until(&:present?)
 
         filename = url.gsub(%r{https?://}, '')
                       .gsub(/[^\w\-]+/, '_')

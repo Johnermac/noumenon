@@ -138,19 +138,22 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
                 subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
-                screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;
-
-                
+                screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;               
 
 
                 // Stop polling if its finished
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {
                   clearInterval(checkResults); // Stop polling once the main scans are complete
-                  downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
-                  downloadScreenshotZip(site);                  
+
+                  if (scanDirectories || scanSubdomains || scanLinks || scanEmails) {
+                    downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
+                  }
+                  
+                  if (scanScreenshots) {
+                    downloadScreenshotZip(site);
+                  }                                   
 
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
-
                   
                 }
               } else {
