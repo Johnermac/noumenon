@@ -35,11 +35,10 @@ gem "redis-client", "= 0.24.0"
 gem "sqlite3", "= 1.7.3"
 
 
-gem "sidekiq", "= 7.3.9"
-gem "httparty", "= 0.22.0"  
+gem "sidekiq", "= 7.3.9" 
 gem "nokogiri"
 gem "typhoeus"
-gem "httpx"
+gem "httpx", "= 1.4.4"
 gem 'selenium-webdriver', '= 4.7.1'
 gem 'watir', '= 7.2.2'
 gem 'zip'
@@ -49,10 +48,6 @@ gem 'psych', '= 5.2.4'
 gem 'stringio', '= 3.1.7'
 gem 'bigdecimal'
 gem "sprockets-rails"
-
-#gem "net-imap", "= 0.4.21"
-
-
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

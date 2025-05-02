@@ -117,54 +117,58 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
           };
 
           // Periodically check for scan results
+          let retryCount = 0;
+          const maxRetries = 60; // 10 minutes (checks every 10 seconds)
+
           const checkResults = setInterval(async () => {
             try {
               const resultResponse = await fetch(`/scans/show?site=${encodeURIComponent(site)}`);
-              
 
               if (resultResponse.ok) {
                 const currentResultData = await resultResponse.json();
 
-                // Merge the current results into the overall results data
                 resultData = { ...resultData, ...currentResultData };
 
                 console.log("Polling result:", currentResultData);
-
-                // Dynamically update the results
                 updateResults();
 
-                // Update completion flags based on scan status
                 directoriesComplete = directoriesComplete || currentResultData.directories_scan_complete;
                 subdomainsComplete = subdomainsComplete || currentResultData.subdomain_scan_complete;
                 linksComplete = linksComplete || currentResultData.link_scan_complete;
                 emailsComplete = emailsComplete || currentResultData.email_scan_complete;
-                screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;               
+                screenshotsComplete = screenshotsComplete || currentResultData.screenshot_scan_complete;
 
-
-                // Stop polling if its finished
                 if (directoriesComplete && subdomainsComplete && linksComplete && emailsComplete && screenshotsComplete) {
-                  clearInterval(checkResults); // Stop polling once the main scans are complete
-
+                  clearInterval(checkResults);
+                  
                   if (scanDirectories || scanSubdomains || scanLinks || scanEmails) {
                     downloadResultsAsTxt(`${site}_scan_results.txt`, resultElement.innerText);
                   }
                   
                   if (scanScreenshots) {
                     downloadScreenshotZip(site);
-                  }                                   
+                  }
 
                   resultElement.innerHTML += `<p>✅ Scans are complete for: <strong>${site}</strong></p>`;
-                  
                 }
               } else {
                 const errorText = await resultResponse.text();
                 console.error(`❌ Fetch failed: ${resultResponse.status} ${resultResponse.statusText}\n${errorText}`);
-    
               }
+              
+              // Stop checking after max retries
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                clearInterval(checkResults);
+                resultElement.innerHTML += `<p>⚠️ Scan process took too long and was stopped. Please check manually.</p>`;
+                console.error("❌ Scan timeout reached. Stopping polling.");
+              }
+
             } catch (error) {
               console.error("Error fetching results:", error);
             }
           }, 10000); // Check every 10 seconds
+
 
       } else {
           resultElement.innerHTML = `❌ Error: ${data.error}`;

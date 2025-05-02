@@ -1,4 +1,4 @@
-require "httparty"
+require "httpx"
 require "nokogiri"
 
 class EmailsWorker
@@ -7,34 +7,35 @@ class EmailsWorker
   def perform(url, site, total_urls)
     begin   
       valid_emails = []
-      response = HTTParty.get(url, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" })
-
-
-      if response.success?
-        html_doc = Nokogiri::HTML(response.body)
-
+      response = HTTPX.get(url, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" })
+    
+      if response.is_a?(HTTPX::Response) && response.status.to_s.start_with?("2", "3")
+        html_doc = Nokogiri::HTML(response.to_s) # Convert response to string for Nokogiri    
         text = html_doc.text
         valid_emails = text.scan(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i).uniq
-
+    
         REDIS.sadd("emails_#{site}", valid_emails) unless valid_emails.empty?
-        # puts "---> Emails extracted from #{url}: #{valid_emails.size}"
-
+    
         # Track the total number of emails processed
         REDIS.incrby("processed_emails_#{site}", 1)
-
+    
         # Check the number of completed emails
         processed_emails = REDIS.get("processed_emails_#{site}").to_i
-        puts "---> processed emails: #{processed_emails}/#{total_urls}" 
-        
+        puts "---> processed emails: #{processed_emails}/#{total_urls}"     
       else
-        puts "Failed to fetch URL: #{url} - Response Code: #{response.code}"
+        puts "❌ Failed to fetch URL: #{url}"
       end            
+    
+    rescue HTTPX::ConnectionError => e
+      puts "❌ Connection error for #{url}: #{e.message} - Retrying..."
+      sleep(1)
+      retry      
     rescue StandardError => e
-      puts "Error during email scan: #{e.message}"    
+      puts "Error during email scan: #{e.message}"      
     ensure            
       processed_emails = REDIS.get("processed_emails_#{site}").to_i
       cleanup_emails(site, valid_emails) if processed_emails >= total_urls      
-    end     
+    end        
   end
 
   private

@@ -1,10 +1,9 @@
-require "httparty"
+require "httpx"
 require "redis"
 require "nokogiri"
 
 
-class ScanWorker
-  include HTTParty
+class ScanWorker  
   include Sidekiq::Worker  
 
   def perform(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
@@ -75,20 +74,19 @@ class ScanWorker
     puts "--->  stripped_site: #{stripped_site}"
 
     # 1 - Getting subdomains from crt.sh    
-    response = HTTParty.get("https://crt.sh/?q=#{stripped_site}")
-    html_doc = Nokogiri::HTML(response.body)
+    response = HTTPX.get("https://crt.sh/?q=#{stripped_site}")
 
-    
-    #puts html_doc.to_html
+    if response.is_a?(HTTPX::Response) && response.status.to_s.start_with?("2", "3")
+      html_doc = Nokogiri::HTML(response.to_s) # Convert response body to string
 
-    html_doc.css('td').each do |td|
-      found_subdomains += td.text.scan(/[a-z0-9]+\.#{Regexp.escape(stripped_site)}/)
-    end        
-
-    # puts "--->  found_subdomains: #{found_subdomains.uniq}"
+      html_doc.css('td').each do |td|
+        found_subdomains += td.text.scan(/[a-z0-9]+\.#{Regexp.escape(stripped_site)}/)
+      end        
+    else
+      puts "❌ Failed to fetch subdomains (Response: #{response.inspect})"
+    end
 
     found_subdomains.uniq
-
   end
 
 
@@ -98,44 +96,42 @@ class ScanWorker
     start_time = Time.now                # Track start time to enforce timeout (optional)
   
     # Periodically check status every 10 seconds
-    Thread.new do
-      loop do
-        # Check if directories scan is done
-        if scan_directories && !directories_done
-          directories_done = REDIS.get("directories_scan_complete_#{site}") == "true"
-          puts "\n => Checking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
-        end
-  
-        # Check if subdomains scan is done
-        if scan_subdomains && !subdomains_done
-          subdomains_done = REDIS.get("subdomain_scan_complete_#{site}") == "true"
-          puts "\n => Checking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
-        end
-  
-        # Break the loop if both scans are complete
-        break if directories_done && subdomains_done          
-  
-        # Optional timeout (e.g., after 5 minutes)
-        if Time.now - start_time > 300 # Timeout after 5 minutes
-          puts "\n❌ Timeout waiting for scans to complete!"
-          break
-        end
-  
-        sleep(15) # Pause for 10 seconds before checking again
+    
+    loop do
+      # Check if directories scan is done
+      if scan_directories && !directories_done
+        directories_done = REDIS.get("directories_scan_complete_#{site}") == "true"
+        puts "\n => Checking directories scan: #{directories_done ? 'Complete' : 'Still running...'}"
       end
 
-      # ===> SEND TO SCAN LINKS
-
-      if directories_done && subdomains_done && (scan_links || scan_emails || scan_screenshots)        
-        
-        puts "\n\t   🔗 Links Scan..." if scan_links
-        puts "\n\t   📧 Emails Scan..." if scan_emails
-        puts "\n\t   📷 Screenshots..." if scan_screenshots
-      
-        prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
+      # Check if subdomains scan is done
+      if scan_subdomains && !subdomains_done
+        subdomains_done = REDIS.get("subdomain_scan_complete_#{site}") == "true"
+        puts "\n => Checking subdomains scan: #{subdomains_done ? 'Complete' : 'Still running...'}"
       end
-      
+
+      # Break the loop if both scans are complete
+      break if directories_done && subdomains_done          
+
+      # Optional timeout (e.g., after 5 minutes)
+      if Time.now - start_time > 300 # Timeout after 5 minutes
+        puts "\n❌ Timeout waiting for scans to complete!"
+        break
+      end
+
+      sleep(15) # Pause for 10 seconds before checking again
     end
+
+    # ===> SEND TO SCAN LINKS
+
+    if directories_done && subdomains_done && (scan_links || scan_emails || scan_screenshots)        
+      
+      puts "\n\t   🔗 Links Scan..." if scan_links
+      puts "\n\t   📧 Emails Scan..." if scan_emails
+      puts "\n\t   📷 Screenshots..." if scan_screenshots
+    
+      prepare_scans(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
+    end    
   end
   
 

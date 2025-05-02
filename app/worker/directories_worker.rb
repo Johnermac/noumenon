@@ -1,4 +1,3 @@
-#require "httparty"
 require "redis"
 require 'httpx'
 
@@ -14,14 +13,12 @@ class DirectoriesWorker
 
         response = HTTPX.get(url, headers: {
           "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0"
-        })
+        })        
 
-        #puts "\n\n\n => #{response.status}"
-
-        if response && (response.status.to_s.start_with?("2") || response.status.to_s.start_with?("3"))
+        if response.is_a?(HTTPX::Response) && response.status.to_s.start_with?("2", "3")
           REDIS.sadd("found_directories_#{site}", dir) unless dir.empty?
         else
-          puts "Failed or error processing #{url}" unless dir.empty?
+          # puts "Failed or error processing #{url} (Response: #{response.inspect})" unless dir.empty?
           REDIS.sadd("not_found_directories_#{site}", dir) unless dir.empty?
         end
 
@@ -34,9 +31,14 @@ class DirectoriesWorker
       puts "---> Processed directories: #{processed_directories}, Total: #{total_directories}" 
       cleanup_directories(site) if processed_directories >= total_directories      
     
+    rescue HTTPX::ConnectionError => e
+      puts "❌ Connection error for #{url}: #{e.message} - Retrying..."
+      sleep(1)
+      retry
+    
     rescue StandardError => e
-      puts "Error during directories scan: #{e.message}"    
-    end    
+      puts "Error during directories scan: #{e.message}"
+    end
   end
 
   private
