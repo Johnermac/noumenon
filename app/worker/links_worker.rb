@@ -47,7 +47,7 @@ class LinksWorker
     REDIS.expire("processed_links_#{site}", 300)
     REDIS.expire("links_scan_complete_#{site}", 300)
     
-    puts "\n  Link Results for #{url}:"
+    puts "\n  Link Results for #{site}:"
     puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?
   end
 end

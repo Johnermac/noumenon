@@ -19,7 +19,7 @@ class ScanWorker
 
     # -----------------  VALIDATE WORDLIST  ---------------------
  
-    wordlist_path = Rails.root.join("tmp", "wordlist.txt")
+    wordlist_path = Rails.root.join("wordlist.txt")
 
     unless File.exist?(wordlist_path)
       puts "\n\t❌ Wordlist file not found at #{wordlist_path}"

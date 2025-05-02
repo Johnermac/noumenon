@@ -48,7 +48,7 @@ class EmailsWorker
     REDIS.expire("processed_emails_#{site}", 300)
     REDIS.expire("emails_scan_complete_#{site}", 300)
     
-    puts "\n  Email Results for #{url}:"
+    puts "\n  Email Results for #{site}:"
     puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any? 
   end
 end
