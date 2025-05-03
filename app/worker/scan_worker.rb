@@ -10,12 +10,13 @@ class ScanWorker
 
     # ---- WHATS RUNNING? -----
 
-    puts "\n\n => RUN DIR? #{scan_directories}"
-    puts " => RUN SUB? #{scan_subdomains}"
-    puts " => RUN LINKS? #{scan_links}"    
-    puts " => RUN EMAILS? #{scan_emails}"
-    puts " => RUN SCREENSHOT? #{scan_screenshots}\n\n"
-
+    puts "\n\n"
+    puts " => RUN DIR!" if scan_directories
+    puts " => RUN SUB!" if scan_subdomains
+    puts " => RUN LINKS!" if scan_links
+    puts " => RUN EMAILS!" if scan_emails
+    puts " => RUN SCREENSHOT!" if scan_screenshots
+    puts "\n\n"
     # -----------------  VALIDATE WORDLIST  ---------------------
  
     wordlist_path = Rails.root.join("wordlist.txt")

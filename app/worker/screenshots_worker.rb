@@ -52,15 +52,14 @@ class ScreenshotsWorker
       rescue => e
         retries += 1
         if retries < 2
-          puts "Retrying #{url}... #{e.message}"
-          sleep 1
+          puts "Retrying #{url}... #{e.message}"          
           retry
         else
           raise
         end
       end
 
-      browser.body.wait_until(timeout: 10, &:present?)
+      browser.body.wait_until(timeout: 5, &:present?)
 
       filename = sanitized_filename(url)
       path = File.join(output_dir, filename)
