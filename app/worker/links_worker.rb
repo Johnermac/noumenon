@@ -14,9 +14,8 @@ class LinksWorker
         links = html_doc.css('a').map { |link| link['href'] }.uniq.compact    
         valid_links = links.select { |link| link.start_with?('http://', 'https://') }
     
-        REDIS.sadd("links_#{site}", valid_links) unless valid_links.empty?
-    
-        REDIS.incrby("processed_links_#{site}", 1)        
+        REDIS.sadd("links_#{site}", valid_links) unless valid_links.empty?    
+               
         processed_links = REDIS.get("processed_links_#{site}").to_i
         puts "---> processed links: #{processed_links}/#{total_urls}"     
       else
@@ -29,7 +28,8 @@ class LinksWorker
       retry    
     rescue StandardError => e
       puts "Error during link scan: #{e.message}"     
-    ensure           
+    ensure     
+      REDIS.incrby("processed_links_#{site}", 1)       
       processed_links = REDIS.get("processed_links_#{site}").to_i   
       cleanup_links(site, valid_links) if processed_links >= total_urls      
     end   

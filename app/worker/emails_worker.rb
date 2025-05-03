@@ -14,10 +14,7 @@ class EmailsWorker
         text = html_doc.text
         valid_emails = text.scan(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i).uniq
     
-        REDIS.sadd("emails_#{site}", valid_emails) unless valid_emails.empty?
-    
-        # Track the total number of emails processed
-        REDIS.incrby("processed_emails_#{site}", 1)
+        REDIS.sadd("emails_#{site}", valid_emails) unless valid_emails.empty?        
     
         # Check the number of completed emails
         processed_emails = REDIS.get("processed_emails_#{site}").to_i
@@ -32,7 +29,9 @@ class EmailsWorker
       retry      
     rescue StandardError => e
       puts "Error during email scan: #{e.message}"      
-    ensure            
+    ensure    
+      # Track the total number of emails processed
+      REDIS.incrby("processed_emails_#{site}", 1)        
       processed_emails = REDIS.get("processed_emails_#{site}").to_i
       cleanup_emails(site, valid_emails) if processed_emails >= total_urls      
     end        
