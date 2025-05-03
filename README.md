@@ -1,24 +1,25 @@
-# README
+[Download the docker image](https://hub.docker.com/r/johnermac/noumenon/)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+> docker-compose up --build
 
-Things you may want to cover:
+docker-compose.yml
+```
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379"
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+  app:
+    image: johnermac/noumenon 
+    container_name: rails_app
+    environment:
+      - RAILS_ENV=development
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    ports:
+      - "3000:3000"
+```
