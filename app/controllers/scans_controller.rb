@@ -1,7 +1,16 @@
+require 'sidekiq/api'
+
 class ScansController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create] 
 
   def create
+
+    # Clear all Sidekiq jobs (pending, scheduled, retry, dead)
+    Sidekiq::Queue.all.each(&:clear)
+    Sidekiq::ScheduledSet.new.clear
+    Sidekiq::RetrySet.new.clear
+    Sidekiq::DeadSet.new.clear
+
     site = params[:site]
     scan_directories = params[:scan_directories] || false  # Default to false if not provided
     scan_subdomains = params[:scan_subdomains] || false
