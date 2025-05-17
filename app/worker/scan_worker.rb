@@ -31,7 +31,7 @@ class ScanWorker
     directories = File.readlines(wordlist_path).map(&:strip).reject(&:empty?)        
 
     if scan_directories
-      directories.each_slice(100) do |batch|
+      directories.each_slice(50) do |batch|
         DirectoriesWorker.perform_async(site, batch, directories.size)
       end
     end   

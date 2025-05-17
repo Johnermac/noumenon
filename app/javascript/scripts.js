@@ -104,7 +104,7 @@ let pollingIntervalId = null;
 
 function startPolling(site, options) {
   let retryCount = 0;
-  const maxRetries = 60;
+  const maxRetries = 150;
 
   let {
     directoriesComplete,

@@ -5,11 +5,7 @@ class ScansController < ApplicationController
 
   def create
 
-    # Clear all Sidekiq jobs (pending, scheduled, retry, dead)
-    Sidekiq::Queue.all.each(&:clear)
-    Sidekiq::ScheduledSet.new.clear
-    Sidekiq::RetrySet.new.clear
-    Sidekiq::DeadSet.new.clear
+    reset_sidekiq()
 
     site = params[:site]
     scan_directories = params[:scan_directories] || false  # Default to false if not provided
@@ -84,5 +80,13 @@ class ScansController < ApplicationController
 
 
     render json: combined_results
+  end  
+
+  def reset_sidekiq       
+    puts "🧹 Clearing all Sidekiq jobs..."
+    Sidekiq::Queue.all.each(&:clear)
+    Sidekiq::ScheduledSet.new.clear
+    Sidekiq::RetrySet.new.clear
+    Sidekiq::DeadSet.new.clear    
   end  
 end
