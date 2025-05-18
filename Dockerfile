@@ -1,60 +1,57 @@
 # syntax=docker/dockerfile:1
 ARG RUBY_VERSION=3.0.2
 
-# Build stage (for installing dependencies)
+# -------------------------
+# Build stage
+# -------------------------
 FROM ruby:$RUBY_VERSION-alpine AS build
 WORKDIR /app
 
-# Install required build dependencies
+# Install build dependencies
 RUN apk add --no-cache \
     build-base \
-    sqlite-dev \
-    git \
-    curl \
-    wget \
-    unzip \
+    sqlite-dev \    
     zip \
+    curl \
+    unzip \
     chromium \
+    build-base \
+    ruby-dev \
     chromium-chromedriver
 
-
-
-# Runtime stage (smaller final image)
+# -------------------------
+# Runtime stage
+# -------------------------
 FROM ruby:$RUBY_VERSION-alpine AS runtime
 WORKDIR /app
 
-# Set environment variables
 ENV RAILS_ENV=development \
     REDIS_URL="redis://redis:6379/0" \
     BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT="production"
 
-
-
-# Install only necessary runtime dependencies
+# Install only necessary runtime packages
 RUN apk add --no-cache \
-    sqlite \
-    vips \
-    git \
+    sqlite \    
     curl \
-    wget \
-    unzip \
-    zip \
     chromium \
-    chromium-chromedriver \    
+    chromium-chromedriver \  
     build-base \
-    ruby-dev
+    ruby-dev \  
+    && adduser -D appuser
 
-# Copy application code and dependencies from build stage
+# Copy gems from build stage
 COPY --from=build /usr/local/bundle /usr/local/bundle
+# Copy app code and wordlist
 COPY . .
-
-# Copy Gemfiles and install gems
-COPY Gemfile Gemfile.lock ./
 RUN bundle install && rm -rf /usr/local/bundle/cache /tmp/*
 
-# Expose application port
+# Ensure correct permissions
+RUN chown -R appuser /app
+USER appuser
+
+# Expose app port
 EXPOSE 3000
 
-# Start Rails server with Sidekiq
+# Start both Sidekiq and Rails
 CMD ["sh", "-c", "bundle exec sidekiq & bundle exec rails server -b 0.0.0.0"]

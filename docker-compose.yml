@@ -7,7 +7,7 @@ services:
       - "6379:6379"
 
   app:
-    image: johnermac/recon-app 
+    image: johnermac/noumenon:latest #use :slimmed (90mb) if you're not gonna use the screenshot option
     container_name: rails_app
     environment:
       - RAILS_ENV=development

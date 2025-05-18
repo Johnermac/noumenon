@@ -23,7 +23,7 @@ class ScanWorker
 
     unless File.exist?(wordlist_path)
       puts "\n\t❌ Wordlist file not found at #{wordlist_path}"
-      return
+      scan_directories = false
     end
 
     # ---------------------  DIR  ------------------------------
