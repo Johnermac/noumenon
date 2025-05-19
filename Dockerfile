@@ -34,6 +34,7 @@ ENV RAILS_ENV=development \
 RUN apk add --no-cache \
     sqlite \    
     curl \
+    zip \
     chromium \
     chromium-chromedriver \  
     build-base \
@@ -47,7 +48,7 @@ COPY . .
 RUN bundle install && rm -rf /usr/local/bundle/cache /tmp/*
 
 # Ensure correct permissions
-RUN chown -R appuser /app
+RUN mkdir -p /app/screenshots && chown -R appuser:appuser /app
 USER appuser
 
 # Expose app port
