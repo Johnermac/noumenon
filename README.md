@@ -1,5 +1,9 @@
+
 **Noumenon** is a directory and subdomain enumeration tool built with Ruby on Rails, Redis, and Sidekiq. 
 It scans and validates subdomains, directories, links, and emails — and takes screenshots of every subdomain and directory it finds.
+
+![noumenon](https://github.com/user-attachments/assets/d9f95e71-ccb2-4ae5-b2b3-6c6c58b1ac07)
+
 
 🛠️ Features:
 
