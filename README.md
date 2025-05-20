@@ -1,9 +1,31 @@
-[Download the docker image](https://hub.docker.com/r/johnermac/noumenon/)
+Noumenon is a directory and subdomain enumeration tool built with Ruby on Rails, Redis, and Sidekiq. 
+It scans and validates subdomains, directories, links, and emails — and takes screenshots of every subdomain and directory it finds.
+
+🛠️ Features:
+
+    Subdomain + directory enumeration
+
+    Email and link extraction
+
+    Screenshot capture (headless Chrome)
+
+    Queue-based architecture with Redis + Sidekiq    
+
+    Dark-themed web UI
+
+    Docker support:
+
+        :latest (~720MB) full version with screenshots
+
+        :slimmed (~90MB) minimal version without screenshot feature
+
+
+[Docker image](https://hub.docker.com/r/johnermac/noumenon/)
 
 > docker-compose up --build
 
 docker-compose.yml
-```
+```yml
 version: '3.8'
 services:
   redis:
@@ -13,7 +35,7 @@ services:
       - "6379:6379"
 
   app:
-    image: johnermac/noumenon 
+    image: johnermac/noumenon:latest #use :slimmed (90mb) if you're not gonna use the screenshot option
     container_name: rails_app
     environment:
       - RAILS_ENV=development
@@ -23,3 +45,8 @@ services:
     ports:
       - "3000:3000"
 ```
+
+
+> I'd recommend to use the 'Scan Directory' by itself because it takes 20~30 min to finish. The others Scans are very fast.
+
+Hope you find it useful – feedback and suggestions are welcome!

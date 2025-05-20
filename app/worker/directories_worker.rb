@@ -57,11 +57,11 @@ class DirectoriesWorker
 
     # ---------------------------- CLEANUP ----------------------------------------
 
-    REDIS.expire("found_directories_#{site}", 10)
-    REDIS.expire("not_found_directories_#{site}", 10)
-    REDIS.expire("processed_directories_#{site}", 10)
-    REDIS.expire("directories_scan_complete_#{site}", 10)
-    REDIS.expire("directories_scan_started_at_#{site}", 10)
+    REDIS.expire("found_directories_#{site}", 1500)
+    REDIS.expire("not_found_directories_#{site}", 1500)
+    REDIS.expire("processed_directories_#{site}", 1500)
+    REDIS.expire("directories_scan_complete_#{site}", 1500)
+    REDIS.expire("directories_scan_started_at_#{site}", 1500)
 
     
 
