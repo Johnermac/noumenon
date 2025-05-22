@@ -26,7 +26,7 @@ It scans and validates subdomains, directories, links, and emails — and takes 
 
 [Docker image](https://hub.docker.com/r/johnermac/noumenon/)
 
-*The easier way is to use with docker:*
+**1** - **Running with Docker (recommended):**
 
 Install docker:
 ```
@@ -66,7 +66,7 @@ services:
 > I'd recommend to use the 'Scan Directory' by itself because it takes 20~30 min to finish. The others Scans are very fast.
 
 
-*If you want to install*:
+**2** - **Running local**:
 
 ```
 git clone git@github.com:Johnermac/noumenon.git
