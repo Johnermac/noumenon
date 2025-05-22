@@ -53,4 +53,37 @@ services:
 
 > I'd recommend to use the 'Scan Directory' by itself because it takes 20~30 min to finish. The others Scans are very fast.
 
+If you want to install:
+
+```
+git clone https://github.com/your-user/your-repo.git
+cd your-repo
+```
+
+Install dependencies using a Ruby version manager
+
+```bash
+# If using rbenv:
+rbenv install 3.0.2
+rbenv local 3.0.2
+
+# Then install gems
+bundle install
+```
+
+Start the required services:
+```bash
+# Start Redis (in another terminal)
+redis-server
+
+# Start the Rails app
+bundle exec rails server
+
+# Start Sidekiq
+bundle exec sidekiq
+```
+
+> Open your browser and visit: http://localhost:3000
+
+
 Hope you find it useful – feedback and suggestions are welcome!
