@@ -26,9 +26,18 @@ It scans and validates subdomains, directories, links, and emails — and takes 
 
 [Docker image](https://hub.docker.com/r/johnermac/noumenon/)
 
-> docker-compose up --build
+*The easier way is to use with docker:*
 
-docker-compose.yml
+Install docker:
+```
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+Copy the code below and name as docker-compose.yml
+
 ```yml
 version: '3.8'
 services:
@@ -50,10 +59,14 @@ services:
       - "3000:3000"
 ```
 
+> Now just: docker-compose up --build
+
+*It'll grab the images and start the app, when finish'd u can access the localhost:3000*
 
 > I'd recommend to use the 'Scan Directory' by itself because it takes 20~30 min to finish. The others Scans are very fast.
 
-If you want to install:
+
+*If you want to install*:
 
 ```
 git clone git@github.com:Johnermac/noumenon.git
