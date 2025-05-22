@@ -56,8 +56,8 @@ services:
 If you want to install:
 
 ```
-git clone https://github.com/your-user/your-repo.git
-cd your-repo
+git clone git@github.com:Johnermac/noumenon.git
+cd noumenon
 ```
 
 Install dependencies using a Ruby version manager
