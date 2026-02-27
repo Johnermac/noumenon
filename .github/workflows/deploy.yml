@@ -30,21 +30,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha
-
       - name: Build Docker image
         run: |
           docker build \
             --target runtime \
             -t $IMAGE_NAME:latest \
-            -t $IMAGE_NAME:${{ github.sha }} \
             .
 
       # -----------------------------
@@ -60,6 +50,8 @@ jobs:
             --target $IMAGE_NAME:latest \
             --tag $IMAGE_NAME:slimmed \
             --include-shell \
+            --include-bin bundle \
+            --include-bin ruby \
             --http-probe=false
 
       # -----------------------------
@@ -70,6 +62,3 @@ jobs:
 
       - name: Push slimmed image
         run: docker push $IMAGE_NAME:slimmed
-
-      - name: Push commit SHA tag
-        run: docker push $IMAGE_NAME:${{ github.sha }}
