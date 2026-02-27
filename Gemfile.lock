@@ -83,7 +83,6 @@ GEM
     base64 (0.2.0)
     benchmark (0.4.0)
     bigdecimal (3.1.9)
-    bindex (0.8.1)
     bootsnap (1.18.4)
       msgpack (~> 1.2)
     builder (3.3.0)
@@ -103,7 +102,6 @@ GEM
     debug (1.10.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
-    digest (3.2.0)
     drb (2.2.1)
     erubi (1.13.1)
     ethon (0.16.0)
@@ -259,11 +257,6 @@ GEM
     watir (7.2.2)
       regexp_parser (>= 1.2, < 3)
       selenium-webdriver (~> 4.2)
-    web-console (4.2.1)
-      actionview (>= 6.0.0)
-      activemodel (>= 6.0.0)
-      bindex (>= 0.4.0)
-      railties (>= 6.0.0)
     websocket (1.2.11)
     websocket-driver (0.7.7)
       base64
@@ -284,7 +277,6 @@ DEPENDENCIES
   bootsnap
   capybara
   debug
-  digest
   httpx (= 1.4.4)
   importmap-rails
   irb (= 1.15.1)
@@ -308,7 +300,6 @@ DEPENDENCIES
   typhoeus
   tzinfo-data
   watir (= 7.2.2)
-  web-console
   zip
 
 RUBY VERSION
