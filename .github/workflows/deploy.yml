@@ -37,22 +37,12 @@ jobs:
             -t $IMAGE_NAME:latest \
             .
 
-      # -----------------------------
-      # Slim the image
-      # -----------------------------
-      - name: Slim Docker image using DockerSlim container
+      - name: Build slimmed Docker image
         run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $(pwd):/workspace \
-            dslim/slim:latest \
-            build \
-            --target $IMAGE_NAME:latest \
-            --tag $IMAGE_NAME:slimmed \
-            --include-shell \
-            --include-bin bundle \
-            --include-bin ruby \
-            --http-probe=false
+          docker build \
+            --target runtime-slimmed \
+            -t $IMAGE_NAME:slimmed \
+            .
 
       # -----------------------------
       # Push images
