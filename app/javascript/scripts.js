@@ -175,15 +175,18 @@ function startPolling(site, options) {
 document.getElementById("scan-form").addEventListener("submit", async function(event) {
   event.preventDefault();
 
+  const form = document.getElementById("scan-form");
   const siteInput = document.getElementById("site-input");
   const resultElement = document.getElementById("result");
 
   const site = siteInput.value.trim();
+  const screenshotToggle = document.getElementById("scan-screenshots-toggle");
+  const screenshotsFeatureEnabled = form.dataset.screenshotEnabled === "true";
   const scanDirectories = document.getElementById("scan-directories-toggle").checked;
   const scanSubdomains = document.getElementById("scan-subdomains-toggle").checked;
   const scanLinks = document.getElementById("scan-links-toggle").checked;
   const scanEmails = document.getElementById("scan-emails-toggle").checked;
-  const scanScreenshots = document.getElementById("scan-screenshots-toggle").checked;
+  const scanScreenshots = screenshotsFeatureEnabled && screenshotToggle && screenshotToggle.checked === true;
 
   resultElement.innerHTML = "⌛ Scanning...";
 
@@ -224,4 +227,3 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
     resultElement.innerHTML = `❌ Error starting scan: ${error.message}`;
   }
 });
-

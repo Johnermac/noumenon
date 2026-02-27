@@ -31,6 +31,7 @@ WORKDIR /app
 
 ENV RAILS_ENV=development \
     REDIS_URL=redis://redis:6379/0 \
+    SCREENSHOT_ENABLED=true \
     BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT=production
 
@@ -62,3 +63,4 @@ USER appuser
 # Slim runtime (no screenshots)
 # -------------------------
 FROM runtime-base AS runtime-slimmed
+ENV SCREENSHOT_ENABLED=false

@@ -12,7 +12,8 @@ class ScansController < ApplicationController
     scan_subdomains = params[:scan_subdomains] || false
     scan_links = params[:scan_links] || false    
     scan_emails = params[:scan_emails] || false 
-    scan_screenshots = params[:scan_screenshots] || false   
+    scan_screenshots = params[:scan_screenshots] || false
+    scan_screenshots = false unless screenshot_feature_enabled?
 
     if site.blank?
       render json: { error: "Site URL is required" }, status: :unprocessable_entity
@@ -21,7 +22,12 @@ class ScansController < ApplicationController
 
     ScanWorker.perform_async(site, scan_directories, scan_subdomains, scan_links, scan_emails, scan_screenshots)
 
-    render json: { message: "Scan started for #{site}", scan_directories: scan_directories, scan_subdomains: scan_subdomains }, status: :accepted
+    render json: {
+      message: "Scan started for #{site}",
+      scan_directories: scan_directories,
+      scan_subdomains: scan_subdomains,
+      screenshot_feature_enabled: screenshot_feature_enabled?
+    }, status: :accepted
   end
 
   def show

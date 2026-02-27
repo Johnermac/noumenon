@@ -19,7 +19,7 @@
 
 
   <div class="container">
-    <form id="scan-form">
+    <form id="scan-form" data-screenshot-enabled="<%= screenshot_feature_enabled? %>">
       <div class="input-container">
         <input type="text" id="site-input" name="site" placeholder="Enter site URL..." required>
         <button type="submit">
@@ -59,13 +59,15 @@
         <span>Scan Emails</span>
       </div>
 
-      <div class="toggle-row">
-        <label class="toggle-switch">
-          <input type="checkbox" id="scan-screenshots-toggle" name="scan_screenshots">
-          <span class="slider"></span>
-        </label>
-        <span>Screenshot</span>
-      </div>
+      <% if screenshot_feature_enabled? %>
+        <div class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="scan-screenshots-toggle" name="scan_screenshots">
+            <span class="slider"></span>
+          </label>
+          <span>Screenshot</span>
+        </div>
+      <% end %>
 
     </form>
 
