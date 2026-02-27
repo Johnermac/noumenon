@@ -7,20 +7,13 @@ It scans and validates subdomains, directories, links, and emails — and takes 
 
 🛠️ Features:
 
-    Subdomain + directory enumeration
-
-    Email and link extraction
-
-    Screenshot capture (headless Chrome)
-
-    Queue-based architecture with Redis + Sidekiq    
-
-    Dark-themed web UI
-
-    Docker support:
-
-        :latest (~720MB) full version with screenshots
-
+  - Subdomain + directory enumeration
+  - Email and link extraction
+  - Screenshot capture (headless Chrome)
+  - Queue-based architecture with Redis + Sidekiq   
+  - Dark-themed web UI
+  - Docker support:
+        :latest (~210MB) full version with screenshots
         :slimmed (~90MB) minimal version without screenshot feature
 
 
@@ -64,37 +57,6 @@ services:
 *It'll grab the images and start the app, when finish'd u can access the localhost:3000*
 
 > I'd recommend to use the 'Scan Directory' by itself because it takes 20~30 min to finish. The others Scans are very fast.
-
-
-**2** - **Running local**:
-
-```
-git clone git@github.com:Johnermac/noumenon.git
-cd noumenon
-```
-
-Install dependencies using a Ruby version manager
-
-```bash
-# If using rbenv:
-rbenv install 3.0.2
-rbenv local 3.0.2
-
-# Then install gems
-bundle install
-```
-
-Start the required services:
-```bash
-# Start Redis (in another terminal)
-redis-server
-
-# Start the Rails app
-bundle exec rails server
-
-# Start Sidekiq
-bundle exec sidekiq
-```
 
 > Open your browser and visit: http://localhost:3000
 
