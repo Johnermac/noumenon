@@ -59,6 +59,7 @@ jobs:
             build \
             --target $IMAGE_NAME:latest \
             --tag $IMAGE_NAME:slimmed \
+            --include-shell \
             --http-probe=false
 
       # -----------------------------
