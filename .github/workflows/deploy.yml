@@ -55,10 +55,10 @@ jobs:
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd):/workspace \
-            slimtoolkit/slim:latest \
+            dslim/slim:latest \
             build \
             --target $IMAGE_NAME:latest \
-            --tag $IMAGE_NAME:slim \
+            --tag $IMAGE_NAME:slimmed \
             --http-probe=false
 
       # -----------------------------
@@ -67,8 +67,8 @@ jobs:
       - name: Push latest image
         run: docker push $IMAGE_NAME:latest
 
-      - name: Push slim image
-        run: docker push $IMAGE_NAME:slim
+      - name: Push slimmed image
+        run: docker push $IMAGE_NAME:slimmed
 
       - name: Push commit SHA tag
         run: docker push $IMAGE_NAME:${{ github.sha }}
