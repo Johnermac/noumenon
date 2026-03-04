@@ -1,5 +1,7 @@
 require 'sidekiq/api'
 require 'json'
+require 'uri'
+require 'httpx'
 
 class ScansController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create] 
@@ -18,6 +20,11 @@ class ScansController < ApplicationController
 
     if site.blank?
       render json: { error: "Site URL is required" }, status: :unprocessable_entity
+      return
+    end
+
+    unless valid_site?(site)
+      render json: { error: "Site URL is invalid or unreachable" }, status: :unprocessable_entity
       return
     end
 
@@ -159,5 +166,15 @@ class ScansController < ApplicationController
 
   def cast_bool(value)
     ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  def valid_site?(site)
+    uri = URI.parse(site)
+    return false unless %w[http https].include?(uri.scheme) && uri.host.present?
+
+    response = HTTPX.with(timeout: { connect_timeout: 5, operation_timeout: 8 }).get(site)
+    response.is_a?(HTTPX::Response)
+  rescue URI::InvalidURIError, HTTPX::Error, StandardError
+    false
   end
 end

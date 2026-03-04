@@ -14,6 +14,10 @@ class DownloadsController < ApplicationController
               filename: "#{sitestrip}_screenshots.zip",
               type: "application/zip",
               disposition: "attachment"
+
+    # Cleanup soon after download is triggered by the client.
+    REDIS.del("screenshot_zip_password_#{site}")
+    CleanupScreenshotsFolderWorker.perform_in(2.minute, site)
   end
 
   def screenshot_zip_info
