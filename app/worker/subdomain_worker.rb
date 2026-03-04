@@ -3,6 +3,7 @@ require "redis"
 
 class SubdomainWorker
   include Sidekiq::Worker
+  RESULT_TTL = 7200
 
   def perform(site, subdomains, total_subdomains)
     begin
@@ -50,7 +51,8 @@ class SubdomainWorker
 
     # -------------------- CLEANUP --------------------
 
-    REDIS.expire("processed_subdomains_#{site}", 600)
-    REDIS.expire("active_subdomains_#{site}", 600)
+    REDIS.expire("processed_subdomains_#{site}", RESULT_TTL)
+    REDIS.expire("active_subdomains_#{site}", RESULT_TTL)
+    REDIS.expire("subdomain_scan_complete_#{site}", RESULT_TTL)
   end
 end
