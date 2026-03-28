@@ -37,10 +37,14 @@ jobs:
           generateSarif: true
 
       # OSV
-      - name: OSV Scan
-        uses: google/osv-scanner-action@v1.7.3
-        with:
-          scan-args: ./...
+      - name: Install OSV-Scanner
+        run: |
+          curl -L https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64 -o osv-scanner
+          chmod +x osv-scanner
+
+      - name: Run OSV Scan
+        run: |
+          ./osv-scanner -r . --format json --output osv-report.json
 
   build:
     needs: security
