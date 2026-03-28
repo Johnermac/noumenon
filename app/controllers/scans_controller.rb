@@ -2,9 +2,18 @@ require 'sidekiq/api'
 require 'json'
 require 'uri'
 require 'httpx'
+require 'ipaddr'
+require 'resolv'
 
 class ScansController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create] 
+  BLOCKED_IP_RANGES = [
+    IPAddr.new("127.0.0.1"),
+    IPAddr.new("169.254.169.254"),
+    IPAddr.new("10.0.0.0/8"),
+    IPAddr.new("172.16.0.0/12"),
+    IPAddr.new("192.168.0.0/16")
+  ].freeze
 
   def create
 
@@ -171,10 +180,36 @@ class ScansController < ApplicationController
   def valid_site?(site)
     uri = URI.parse(site)
     return false unless %w[http https].include?(uri.scheme) && uri.host.present?
+    return false if blocked_host?(uri.host)
 
     response = HTTPX.with(timeout: { connect_timeout: 5, operation_timeout: 8 }).get(site)
     response.is_a?(HTTPX::Response)
   rescue URI::InvalidURIError, HTTPX::Error, StandardError
+    false
+  end
+
+  def blocked_host?(host)
+    ips = []
+
+    begin
+      ips << IPAddr.new(host)
+    rescue IPAddr::InvalidAddressError
+      # Not an IP literal; resolve hostname below.
+    end
+
+    if ips.empty?
+      resolved = Resolv.getaddresses(host)
+      ips = resolved.filter_map do |address|
+        begin
+          IPAddr.new(address)
+        rescue IPAddr::InvalidAddressError
+          nil
+        end
+      end
+    end
+
+    ips.any? { |ip| BLOCKED_IP_RANGES.any? { |blocked| blocked.include?(ip) } }
+  rescue Resolv::ResolvError, StandardError
     false
   end
 end
