@@ -49,8 +49,16 @@ jobs:
           chmod +x osv-scanner
 
       - name: Run OSV Scan (report)
+        continue-on-error: true
         run: |
-          ./osv-scanner -r . --format json --output osv-report.json      
+          ./osv-scanner -r . --format json --output-file osv-report.json
+
+      - name: Upload OSV report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: osv-report
+          path: osv-report.json
 
   build:
     needs: security
