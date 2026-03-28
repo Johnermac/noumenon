@@ -25,10 +25,7 @@ jobs:
       - name: CodeQL Init
         uses: github/codeql-action/init@v3
         with:
-          languages: go
-
-      - name: Build for CodeQL
-        run: go build ./...
+          languages: go      
 
       - name: CodeQL Analyze
         uses: github/codeql-action/analyze@v3
