@@ -25,7 +25,7 @@ jobs:
       - name: CodeQL Init
         uses: github/codeql-action/init@v3
         with:
-          languages: ruby,javascript-actions
+          languages: ruby
 
       - name: CodeQL Analyze
         uses: github/codeql-action/analyze@v3
