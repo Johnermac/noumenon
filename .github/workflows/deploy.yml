@@ -91,11 +91,28 @@ jobs:
       # Scan final artifact
       # -----------------------------
       - name: Scan slimmed image
-        uses: anchore/scan-action@v3
+        id: grype_scan
+        continue-on-error: true
+        uses: anchore/scan-action@v6
         with:
-          image: $IMAGE_NAME:slimmed
+          image: ${{ env.IMAGE_NAME }}:slimmed
           severity-cutoff: high
           fail-build: true
+          cache-db: true
+          output-format: sarif
+          output-file: grype-results.sarif
+
+      - name: Upload Grype report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grype-results
+          path: grype-results.sarif
+          if-no-files-found: ignore
+
+      - name: Fail build on Grype findings
+        if: steps.grype_scan.outcome == 'failure'
+        run: exit 1
 
       # -----------------------------
       # SBOM 
