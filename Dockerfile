@@ -4,19 +4,22 @@ ARG RUBY_VERSION=3.4.9
 # -------------------------
 # Build stage
 # -------------------------
-FROM ruby:$RUBY_VERSION-alpine AS build
+FROM ruby:$RUBY_VERSION-slim AS build
 WORKDIR /app
 
 ENV BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT=production
 
-RUN apk add --no-cache \
-    build-base \
-    sqlite-dev \
-    ruby-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     curl \
+    git \
+    libsqlite3-dev \
+    pkg-config \
+    sqlite3 \
+    unzip \
     zip \
-    unzip
+    && rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
@@ -26,7 +29,7 @@ COPY . .
 # -------------------------
 # Shared runtime base
 # -------------------------
-FROM ruby:$RUBY_VERSION-alpine AS runtime-base
+FROM ruby:$RUBY_VERSION-slim AS runtime-base
 WORKDIR /app
 
 ENV RAILS_ENV=development \
@@ -35,11 +38,12 @@ ENV RAILS_ENV=development \
     BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT=production
 
-RUN apk add --no-cache \
-    sqlite \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    sqlite3 \
     zip \
-    && adduser -D appuser
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash appuser
 
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
@@ -55,9 +59,10 @@ CMD ["sh", "-c", "bundle exec sidekiq & bundle exec rails server -b 0.0.0.0"]
 # -------------------------
 FROM runtime-base AS runtime
 USER root
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
-    chromium-chromedriver
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
 USER appuser
 
 # -------------------------

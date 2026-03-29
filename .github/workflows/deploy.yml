@@ -96,7 +96,7 @@ jobs:
           output-file: grype-results.sarif
 
       - name: Upload Grype SARIF
-        if: always()
+        if: always() && hashFiles('grype-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: grype-results.sarif
