@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG RUBY_VERSION=3.0.2
+ARG RUBY_VERSION=3.4.9
 
 # -------------------------
 # Build stage

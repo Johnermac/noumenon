@@ -1,9 +1,10 @@
 source "https://rubygems.org"
 
-ruby "3.0.2"
+ruby "3.4.9"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "= 7.1.5.1"
+gem "rails", "= 7.1.5.2"
+gem "rack", ">= 3.1.20", "< 3.2"
 
 
 # Use the Puma web server [https://github.com/puma/puma]
@@ -36,7 +37,7 @@ gem "sqlite3", "= 1.7.3"
 
 
 gem "sidekiq", "= 7.3.9" 
-gem "nokogiri"
+gem "nokogiri", ">= 1.18.9"
 gem "typhoeus"
 gem "httpx", "= 1.4.4"
 gem 'selenium-webdriver', '= 4.7.1'
