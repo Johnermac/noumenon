@@ -12,6 +12,7 @@ jobs:
   security:
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       security-events: write
       id-token: write
@@ -34,37 +35,29 @@ jobs:
       # Semgrep (SAST)
       # -----------------------------
       - name: Semgrep Scan
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/security-audit
-          generateSarif: true
-          auditOn: push
-
-      # -----------------------------
-      # OSV (dependency scan)
-      # -----------------------------
-      - name: Install OSV-Scanner
         run: |
-          curl -L https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64 -o osv-scanner
-          chmod +x osv-scanner
+          docker run --rm \
+            -v "$PWD:/src" \
+            -w /src \
+            semgrep/semgrep semgrep scan \
+            --config p/security-audit \
+            --sarif \
+            --output semgrep.sarif
 
-      - name: Run OSV Scan (report)
-        continue-on-error: true
-        run: |
-          ./osv-scanner -r . --format json --output-file osv-report.json
-
-      - name: Upload OSV report
+      - name: Upload Semgrep SARIF
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          name: osv-report
-          path: osv-report.json
+          sarif_file: semgrep.sarif
+          category: semgrep
 
   build:
     needs: security
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
+      security-events: write
       id-token: write
 
     steps:
@@ -102,13 +95,12 @@ jobs:
           output-format: sarif
           output-file: grype-results.sarif
 
-      - name: Upload Grype report
+      - name: Upload Grype SARIF
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          name: grype-results
-          path: grype-results.sarif
-          if-no-files-found: ignore
+          sarif_file: grype-results.sarif
+          category: grype-image
 
       - name: Fail build on Grype findings
         if: steps.grype_scan.outcome == 'failure'
@@ -120,7 +112,7 @@ jobs:
       - name: Generate SBOM (slimmed)
         uses: anchore/sbom-action@v0
         with:
-          image: $IMAGE_NAME:slimmed
+          image: ${{ env.IMAGE_NAME }}:slimmed
 
       # -----------------------------
       # Login
