@@ -18,18 +18,18 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # -----------------------------
       # CodeQL (visibility)
       # -----------------------------
       - name: CodeQL Init
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ruby
 
       - name: CodeQL Analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
 
       # -----------------------------
       # Semgrep (SAST)
@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload Semgrep SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
           category: semgrep
@@ -61,7 +61,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # -----------------------------
       # Build images
@@ -86,7 +86,7 @@ jobs:
       - name: Scan slimmed image
         id: grype_scan
         continue-on-error: true
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         with:
           image: ${{ env.IMAGE_NAME }}:slimmed
           severity-cutoff: high
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload Grype SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: grype-results.sarif
           category: grype-image
