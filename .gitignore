@@ -33,3 +33,12 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Ignore docker override file for development environment.
+/docker-compose.override.yml
+
+# Ignore codex files.
+/codex/*
+!/codex/.keep
+.codex/*
+!.codex/.keep

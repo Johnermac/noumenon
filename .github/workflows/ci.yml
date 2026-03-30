@@ -1,0 +1,118 @@
+name: Secure CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: secure-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: johnermac/noumenon
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # -----------------------------
+      # CodeQL (primary SAST)
+      # -----------------------------
+      - name: CodeQL Init
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ruby
+
+      - name: CodeQL Analyze
+        uses: github/codeql-action/analyze@v4
+
+      # -----------------------------
+      # Semgrep (additional SAST)
+      # -----------------------------
+      - name: Semgrep Scan
+        run: |
+          docker run --rm \
+            -v "$PWD:/src" \
+            -w /src \
+            semgrep/semgrep semgrep scan \
+            --config p/security-audit \
+            --sarif \
+            --output semgrep.sarif
+
+      - name: Upload Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  build:
+    needs: security
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # -----------------------------
+      # Build images
+      # -----------------------------
+      - name: Build runtime image
+        run: |
+          docker build \
+            --target runtime \
+            -t $IMAGE_NAME:latest \
+            .
+
+      - name: Build slimmed image
+        run: |
+          docker build \
+            --target runtime-slimmed \
+            -t $IMAGE_NAME:slimmed \
+            .
+
+      # -----------------------------
+      # Scan final artifact (Grype)
+      # -----------------------------
+      - name: Scan slimmed image
+        continue-on-error: true
+        uses: anchore/scan-action@v7
+        with:
+          image: ${{ env.IMAGE_NAME }}:slimmed
+          cache-db: true
+          output-format: sarif
+          output-file: grype-results.sarif
+
+      - name: Upload Grype SARIF
+        if: always() && hashFiles('grype-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: grype-results.sarif
+          category: grype-image
+
+      # -----------------------------
+      # Push to Docker Hub
+      # -----------------------------
+      # - uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #
+      # - name: Push runtime image
+      #   run: docker push $IMAGE_NAME:latest
+      #
+      # - name: Push slimmed image
+      #   run: docker push $IMAGE_NAME:slimmed
