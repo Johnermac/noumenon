@@ -33,4 +33,6 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
-docker-compose.override.yml
+
+# Ignore docker override file for development environment.
+/docker-compose.override.yml

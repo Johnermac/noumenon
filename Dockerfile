@@ -43,8 +43,8 @@ RUN apk add --no-cache \
 
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
-RUN mkdir -p /app/tmp/screenshots \
-    && chown -R appuser:appuser /app
+
+RUN mkdir -p /app/tmp/screenshots && chown -R appuser:appuser /app
 
 USER appuser
 EXPOSE 3000
