@@ -1,11 +1,67 @@
 
 let resultData = {};
+let zipDownloadMessage = null;
+function normalizeSite(site) {
+  return site.trim().replace(/\/+$/, "");
+}
+
+function asBool(value) {
+  return value === true || value === "true";
+}
+
+function moduleStatus(enabled, complete) {
+  if (enabled === false) return "not enabled";
+  return complete ? "complete" : "running";
+}
 
 function updateResults(site) {
+  const scanOptions = resultData.scan_options || {};
   let resultHTML = `<p>📡 Scan Results for: <strong>${site}</strong></p>`;
+  resultHTML += `<div class="result-section"><p>📊 Scan Status:</p><ul>`;
+  resultHTML += `<li><span>Directories: ${moduleStatus(scanOptions.scan_directories, resultData.directories_scan_complete)}</span></li>`;
+  resultHTML += `<li><span>Subdomains: ${moduleStatus(scanOptions.scan_subdomains, resultData.subdomain_scan_complete)}</span></li>`;
+  resultHTML += `<li><span>Links: ${moduleStatus(scanOptions.scan_links, resultData.link_scan_complete)}</span></li>`;
+  resultHTML += `<li><span>Emails: ${moduleStatus(scanOptions.scan_emails, resultData.email_scan_complete)}</span></li>`;
+  resultHTML += `<li><span>Screenshots: ${moduleStatus(scanOptions.scan_screenshots, resultData.screenshot_scan_complete)}</span></li>`;
+  if (resultData.screenshot_scan_error) {
+    resultHTML += `<li><span>Screenshot error: ${resultData.screenshot_scan_error}</span></li>`;
+  }
+  if (zipDownloadMessage) {
+    resultHTML += `<li><span>${zipDownloadMessage}</span></li>`;
+  }
+  resultHTML += `</ul></div>`;
+
+  const telemetry = resultData.directory_telemetry;
+  if (telemetry) {
+    const hasHitRates = telemetry.phase_hit_rates && Object.keys(telemetry.phase_hit_rates).length > 0;
+    const hasPhaseProgress = telemetry.current_phase && telemetry.current_phase !== "completed";
+    const shouldShowTelemetry = resultData.directories_scan_complete === false || telemetry.current_phase || telemetry.waf_detected || hasHitRates;
+
+    if (shouldShowTelemetry) {
+    resultHTML += `<div class="result-section"><p>🧠 Directory Scan Telemetry:</p><ul>`;
+    resultHTML += `<li><span>Current phase: ${telemetry.current_phase || "n/a"}</span></li>`;
+
+    if (hasPhaseProgress) {
+      resultHTML += `<li><span>Phase progress: ${telemetry.phase_processed || 0}/${telemetry.phase_total || 0}</span></li>`;
+    }
+
+    resultHTML += `<li><span>WAF detected: ${telemetry.waf_detected ? "yes" : "no"}</span></li>`;
+    if (telemetry.scan_error) {
+      resultHTML += `<li><span>Error: ${telemetry.scan_error}</span></li>`;
+    }
+
+    if (hasHitRates) {
+      Object.entries(telemetry.phase_hit_rates).forEach(([phase, rate]) => {
+        resultHTML += `<li><span>${phase} hit-rate: ${rate}%</span></li>`;
+      });
+    }
+
+    resultHTML += `</ul></div>`;
+    }
+  }
 
   // Found Directories
-  if (resultData.found_directories?.length) {
+  if (Array.isArray(resultData.found_directories) && resultData.found_directories.length) {
     resultHTML += `<div class="result-section">
                       <p class="found_directories">✅ Found Directories:</p><ul>`;
     resultData.found_directories.forEach(directory => {
@@ -14,18 +70,8 @@ function updateResults(site) {
     resultHTML += `</ul></div>`;
   }
 
-  // Not Found Directories
-  if (resultData.not_found_directories?.length) {
-    resultHTML += `<div class="result-section">
-                      <p class="not-found_dir">❌ Not Found Directories:</p><ul>`;
-    resultData.not_found_directories.forEach(directory => {
-      resultHTML += `<li><span>${directory}</span></li>`;
-    });
-    resultHTML += `</ul></div>`;
-  }
-
   // Found Subdomains
-  if (resultData.found_subdomains?.length) {
+  if (Array.isArray(resultData.found_subdomains) && resultData.found_subdomains.length) {
     resultHTML += `<div class="result-section">
                       <p class="found_subdomains">🟡 Found Subdomains:</p><ul>`;
     resultData.found_subdomains.forEach(subdomain => {
@@ -35,7 +81,7 @@ function updateResults(site) {
   }
 
   // Active Subdomains
-  if (resultData.active_subdomains?.length) {
+  if (Array.isArray(resultData.active_subdomains) && resultData.active_subdomains.length) {
     resultHTML += `<div class="result-section">
                       <p class="active_sub">🟢 Active Subdomains:</p><ul>`;
     resultData.active_subdomains.forEach(subdomain => {
@@ -45,7 +91,7 @@ function updateResults(site) {
   }
 
   // Extracted Links
-  if (resultData.extracted_links?.length) {
+  if (Array.isArray(resultData.extracted_links) && resultData.extracted_links.length) {
     resultHTML += `<div class="result-section">
                       <p class="extracted_links">🔗 Extracted Links:</p><ul>`;
     resultData.extracted_links.forEach(link => {
@@ -55,7 +101,7 @@ function updateResults(site) {
   }
 
   // Extracted Emails
-  if (resultData.extracted_emails?.length) {
+  if (Array.isArray(resultData.extracted_emails) && resultData.extracted_emails.length) {
     resultHTML += `<div class="result-section">
                       <p class="extracted_emails">🔵 Extracted Emails:</p><ul>`;
     resultData.extracted_emails.forEach(email => {
@@ -82,22 +128,38 @@ function downloadResultsAsTxt(filename, content) {
 }
 
 function downloadScreenshotZip(site) {
-  fetch(`/download/screenshot_zip_info?site=${encodeURIComponent(site)}`)
-    .then(res => res.json())
-    .then(data => {
+  let attempts = 0;
+  const maxAttempts = 20;
+  const resultElement = document.getElementById("result");
+
+  const pollZip = async () => {
+    try {
+      const res = await fetch(`/download/screenshot_zip_info?site=${encodeURIComponent(site)}`);
+      const data = await res.json();
+
       if (data.zip_ready) {
         alert(`🗝️ ZIP Password: ${data.password}`);
         const a = document.createElement("a");
         a.href = `/download/screenshot_zip?site=${encodeURIComponent(site)}`;
         a.download = `${site}_screenshots.zip`;
         a.click();
-      } else {
-        console.warn("⏳ Zip not ready yet.");
+        zipDownloadMessage = "ZIP download started!";
+        updateResults(site);
+        return;
       }
-    })
-    .catch(err => {
+
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        setTimeout(pollZip, 3000);
+      } else {
+        console.warn("Screenshot ZIP is still not ready.");
+      }
+    } catch (err) {
       console.error("❌ Failed to fetch zip info:", err);
-    });
+    }
+  };
+
+  pollZip();
 }
 
 let pollingIntervalId = null;
@@ -131,6 +193,7 @@ function startPolling(site, options) {
         resultData = { ...resultData, ...currentResultData };
 
         console.log("Polling result:", currentResultData);
+        console.log("Directory telemetry:", currentResultData.directory_telemetry);
         updateResults(site);
 
         directoriesComplete ||= currentResultData.directories_scan_complete;
@@ -179,7 +242,8 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   const siteInput = document.getElementById("site-input");
   const resultElement = document.getElementById("result");
 
-  const site = siteInput.value.trim();
+  const site = normalizeSite(siteInput.value);
+  zipDownloadMessage = null;
   const screenshotToggle = document.getElementById("scan-screenshots-toggle");
   const screenshotsFeatureEnabled = form.dataset.screenshotEnabled === "true";
   const scanDirectories = document.getElementById("scan-directories-toggle").checked;
@@ -205,19 +269,32 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
     const data = await response.json();
 
     if (response.ok) {
+      const effectiveScanDirectories = asBool(data.scan_directories);
+      const effectiveScanSubdomains = asBool(data.scan_subdomains);
+      const effectiveScanLinks = asBool(data.scan_links);
+      const effectiveScanEmails = asBool(data.scan_emails);
+      const effectiveScanScreenshots = asBool(data.scan_screenshots);
+
+      resultData.scan_options = {
+        scan_directories: effectiveScanDirectories,
+        scan_subdomains: effectiveScanSubdomains,
+        scan_links: effectiveScanLinks,
+        scan_emails: effectiveScanEmails,
+        scan_screenshots: effectiveScanScreenshots
+      };
       resultElement.innerHTML = `<p>📡 Scan started for: <strong>${site}</strong></p>`;
 
       startPolling(site, {
-        directoriesComplete: !scanDirectories,
-        subdomainsComplete: !scanSubdomains,
-        linksComplete: !scanLinks,
-        emailsComplete: !scanEmails,
-        screenshotsComplete: !scanScreenshots,
-        scanDirectories,
-        scanSubdomains,
-        scanLinks,
-        scanEmails,
-        scanScreenshots
+        directoriesComplete: !effectiveScanDirectories,
+        subdomainsComplete: !effectiveScanSubdomains,
+        linksComplete: !effectiveScanLinks,
+        emailsComplete: !effectiveScanEmails,
+        screenshotsComplete: !effectiveScanScreenshots,
+        scanDirectories: effectiveScanDirectories,
+        scanSubdomains: effectiveScanSubdomains,
+        scanLinks: effectiveScanLinks,
+        scanEmails: effectiveScanEmails,
+        scanScreenshots: effectiveScanScreenshots
       });
     } else {
       resultElement.innerHTML = `❌ Error: ${data.error}`;

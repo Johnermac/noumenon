@@ -3,6 +3,7 @@ require "nokogiri"
 
 class LinksWorker
   include Sidekiq::Worker
+  RESULT_TTL = 7200
 
   def perform(url, site, total_urls)
     begin   
@@ -43,9 +44,9 @@ class LinksWorker
 
     # ---------------------------- CLEANUP ----------------------------------------
 
-    REDIS.expire("links_#{site}", 600) 
-    REDIS.expire("processed_links_#{site}", 300)
-    REDIS.expire("links_scan_complete_#{site}", 300)
+    REDIS.expire("links_#{site}", RESULT_TTL) 
+    REDIS.expire("processed_links_#{site}", RESULT_TTL)
+    REDIS.expire("link_scan_complete_#{site}", RESULT_TTL)
     
     puts "\n  Link Results for #{site}:"
     puts "    \t✅ Found Links: #{valid_links.join(', ')}" if valid_links.any?

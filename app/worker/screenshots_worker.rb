@@ -5,9 +5,19 @@ require "zip"
 class ScreenshotsWorker
   include Sidekiq::Worker
 
-  SCREENSHOT_EXPIRY = 300
+  SCREENSHOT_EXPIRY = 7200
+  LOCK_TTL = 7200
 
   def perform(urls, site)
+    lock_key = "screenshot_worker_lock_#{site}"
+    unless acquire_lock(lock_key)
+      puts "⚠️ Skipping duplicate ScreenshotsWorker for #{site}"
+      return
+    end
+
+    REDIS.set("expected_screenshots_#{site}", urls.length)
+    REDIS.expire("expected_screenshots_#{site}", SCREENSHOT_EXPIRY)
+
     browser = nil
 
     begin
@@ -24,8 +34,8 @@ class ScreenshotsWorker
         ]
       }
 
-      sitestrip = site.gsub(%r{https?://(www\.)?}, "").gsub(/(www\.)?/, "")
-      output_dir = Rails.root.join("tmp", "screenshots", sitestrip)
+      sitestrip = ScreenshotZipper.stripped_site(site)
+      output_dir = ScreenshotZipper.screenshots_dir.join(sitestrip)
       FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
 
       urls.each do |url|
@@ -38,7 +48,9 @@ class ScreenshotsWorker
     ensure
       browser&.close rescue nil
       processed = REDIS.get("processed_screenshots_#{site}").to_i
-      cleanup_screenshot(site) if processed >= urls.length
+      expected = REDIS.get("expected_screenshots_#{site}").to_i
+      cleanup_screenshot(site) if expected.positive? && processed >= expected && mark_cleanup_once(site)
+      release_lock(lock_key)
     end
   end
 
@@ -91,13 +103,36 @@ class ScreenshotsWorker
   end
 
   def cleanup_screenshot(site)
-    REDIS.set("screenshot_scan_complete_#{site}", "true")
     REDIS.expire("processed_screenshots_#{site}", SCREENSHOT_EXPIRY)
-    REDIS.expire("screenshot_scan_complete_#{site}", SCREENSHOT_EXPIRY)
+    REDIS.expire("expected_screenshots_#{site}", SCREENSHOT_EXPIRY)
 
-    ScreenshotZipper.zip(site)
-    CleanupScreenshotsFolderWorker.perform_in(5.minutes, site)
+    password = ScreenshotZipper.zip(site)
+    if password
+      REDIS.set("screenshot_scan_complete_#{site}", "true")
+      REDIS.expire("screenshot_scan_complete_#{site}", SCREENSHOT_EXPIRY)
+      REDIS.del("screenshot_scan_error_#{site}")
+      REDIS.del("screenshot_cleanup_started_#{site}")
+      CleanupScreenshotsFolderWorker.perform_in(30.minutes, site)
+      puts "\n\t✅ All screenshots complete for #{site}"
+    else
+      REDIS.set("screenshot_scan_complete_#{site}", "false")
+      REDIS.set("screenshot_scan_error_#{site}", "zip_generation_failed")
+      REDIS.expire("screenshot_scan_complete_#{site}", SCREENSHOT_EXPIRY)
+      REDIS.expire("screenshot_scan_error_#{site}", SCREENSHOT_EXPIRY)
+      puts "\n\t❌ Screenshot ZIP could not be created for #{site}"
+    end
+  end
 
-    puts "\n\t✅ All screenshots complete for #{site}"
+  def acquire_lock(lock_key)
+    REDIS.set(lock_key, jid, nx: true, ex: LOCK_TTL)
+  end
+
+  def release_lock(lock_key)
+    return unless REDIS.get(lock_key) == jid
+    REDIS.del(lock_key)
+  end
+
+  def mark_cleanup_once(site)
+    REDIS.set("screenshot_cleanup_started_#{site}", jid, nx: true, ex: LOCK_TTL)
   end
 end

@@ -5,10 +5,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
   flex-direction: column;
   padding: 20px;
+  overflow-y: auto;
 }
 
 h1 {
@@ -178,7 +179,4 @@ a:hover {
   color: #fdfb70; /* Brighter blue when hovered */
   text-decoration: underline;
 }
-
-
-
 
