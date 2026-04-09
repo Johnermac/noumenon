@@ -37,12 +37,10 @@
 
 # Ignore docker override file for development environment.
 /docker-compose.override.yml
-<<<<<<< HEAD
-=======
 
 # Ignore codex files.
 /codex/*
 !/codex/.keep
 .codex/*
 !.codex/.keep
->>>>>>> 1f36a14 (B: test added to pipeline)
+
