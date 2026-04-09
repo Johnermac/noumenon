@@ -33,6 +33,7 @@ gem "irb", "= 1.15.1"
 gem "redis", "= 5.4.0"
 gem "redis-client", "= 0.24.0"
 gem "sqlite3", "= 1.7.3"
+gem "net-imap", "= 0.4.19"
 
 
 gem "sidekiq", "= 7.3.9" 

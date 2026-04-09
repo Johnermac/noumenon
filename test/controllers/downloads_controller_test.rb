@@ -7,10 +7,11 @@ class DownloadsControllerTest < ActionDispatch::IntegrationTest
     @original_redis = REDIS
     Object.send(:remove_const, :REDIS)
     Object.const_set(:REDIS, @redis)
+    FileUtils.mkdir_p(ScreenshotZipper.screenshots_dir)
   end
 
   teardown do
-
+    FileUtils.rm_rf(ScreenshotZipper.screenshots_dir)
     Object.send(:remove_const, :REDIS)
     Object.const_set(:REDIS, @original_redis)
   end
@@ -24,7 +25,8 @@ class DownloadsControllerTest < ActionDispatch::IntegrationTest
 
   test "screenshot_zip_info returns password when zip is ready" do
     site = "https://example.com"
-
+    zip_path = ScreenshotZipper.screenshots_dir.join("#{ScreenshotZipper.stripped_site(site)}.zip")
+    File.write(zip_path, "zip")
     @redis.set_string("screenshot_zip_password_#{site}", "secret123")
 
     get "/download/screenshot_zip_info", params: { site: site }
