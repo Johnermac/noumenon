@@ -6,6 +6,7 @@
 
 # Ignore bundler config.
 /.bundle
+/vendor/bundle
 
 # Ignore all environment files (except templates).
 /.env*
@@ -36,3 +37,10 @@
 
 # Ignore docker override file for development environment.
 /docker-compose.override.yml
+
+# Ignore codex files.
+/codex/*
+!/codex/.keep
+.codex/*
+
+
