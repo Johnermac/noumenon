@@ -1,0 +1,103 @@
+module HTTPX
+  class Connection::HTTP2
+    include Callbacks
+    include Loggable
+
+    MAX_CONCURRENT_REQUESTS: Integer
+
+    attr_reader streams: Hash[Request, ::HTTP2::Stream]
+    attr_reader pending: Array[Request]
+
+    @connection: HTTP2::Client
+    @options: Options
+    @settings: Hash[Symbol, Integer | bool]
+    @max_concurrent_requests: Integer
+    @max_requests: Integer
+    @drains: Hash[Request, String]
+    @pings: Array[String]
+    @buffer: Buffer
+
+    def interests: () -> io_interests?
+
+    def close: () -> void
+
+    def empty?: () -> bool
+
+    def exhausted?: () -> bool
+
+    def <<: (string) -> void
+
+    def can_buffer_more_requests?: () -> bool
+
+    def send: (Request request, ?bool head) -> bool
+
+    def consume: () -> void
+
+    def handle_error: (StandardError ex, ?Request? request) -> void
+
+    def ping: () -> void
+
+    alias reset init_connection
+
+    def timeout: () -> Numeric?
+
+    private
+
+    def initialize: (Buffer buffer, Options options) -> untyped
+
+    def send_pending: () -> void
+
+    def set_protocol_headers: (Request) -> _Each[[String, String]]
+
+    def handle: (Request request, ::HTTP2::Stream stream) -> void
+
+    def init_connection: () -> void
+
+    def handle_stream: (::HTTP2::Stream stream, Request request) -> void
+
+    def join_headline: (Request request) -> String
+
+    def join_headers: (::HTTP2::Stream stream, Request request) -> void
+
+    def join_trailers: (::HTTP2::Stream stream, Request request) -> void
+
+    def join_body: (::HTTP2::Stream stream, Request request) -> void
+
+    def on_stream_headers: (::HTTP2::Stream stream, Request request, Array[[String, String]] headers) -> void
+
+    def on_stream_trailers: (::HTTP2::Stream stream, Response response, Array[[String, String]] headers) -> void
+
+    def on_stream_data: (::HTTP2::Stream stream, Request request, String data) -> void
+
+    def on_stream_refuse: (::HTTP2::Stream stream, Request request, StandardError error) -> void
+
+    def on_stream_close: (::HTTP2::Stream stream, Request request, (Symbol | StandardError)? error) -> void
+
+    def on_frame: (string bytes) -> void
+
+    def on_settings: (*untyped) -> void
+
+    def on_close: (Integer last_frame, Symbol? error, String? payload) -> void
+
+    def on_frame_sent: (::HTTP2::frame) -> void
+
+    def on_frame_received: (::HTTP2::frame) -> void
+
+    def on_altsvc: (String origin, ::HTTP2::frame) -> void
+
+    def on_promise: (::HTTP2::Stream) -> void
+
+    def on_origin: (String) -> void
+
+    def on_pong: (string ping) -> void
+
+    class Error < ::HTTPX::Error
+    end
+
+    class GoawayError < Error
+    end
+
+    class PingError < Error
+    end
+  end
+end

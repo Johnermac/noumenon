@@ -1,0 +1,112 @@
+module HTTP2
+  VERSION: String
+
+  DEFAULT_FLOW_WINDOW: Integer
+
+  DEFAULT_HEADER_SIZE: Integer
+
+  DEFAULT_MAX_CONCURRENT_STREAMS: Integer
+
+  EMPTY: []
+
+  type connection_opts = Hash[Symbol, untyped]
+
+  type settings_hash = {
+    settings_header_table_size: Integer,
+    settings_enable_push: Integer,
+    settings_max_concurrent_streams:  Integer,
+    settings_initial_window_size: Integer,
+    settings_max_frame_size: Integer,
+    settings_max_header_list_size: Integer
+  }
+
+  type settings_ary = Array[settings_enum]
+
+  type settings_enum = Enumerable[[Symbol, Integer]]
+
+  SPEC_DEFAULT_CONNECTION_SETTINGS: settings_hash
+
+  DEFAULT_CONNECTION_SETTINGS: settings_hash
+
+  DEFAULT_WEIGHT: Integer
+
+  CONNECTION_PREFACE_MAGIC: String
+
+  REQUEST_MANDATORY_HEADERS: Array[String]
+
+  RESPONSE_MANDATORY_HEADERS: Array[String]
+
+  type header_pair = [string, string]
+
+  # # FRAMES
+  type frame_control_flags = Array[:end_headers | :end_stream]
+
+  type common_frame = { stream: Integer }
+
+  # # HEADERS
+  type headers_frame = common_frame & {
+    type: :headers, flags: frame_control_flags, payload: Enumerable[header_pair] | String,
+    ?method: Symbol, ?trailer: Array[String], ?content_length: Integer, ?padding: Integer
+  }
+
+  # # DATA
+  type data_frame = { type: :data, flags: frame_control_flags, ?length: Integer, payload: String, ?padding: Integer }
+
+  # # PUSH_PROMISE
+  type push_promise_frame = { type: :push_promise, promise_stream: Integer, flags: frame_control_flags, ?method: Symbol, ?trailer: Array[String], ?content_length: Integer, payload: Enumerable[header_pair], ?padding: Integer }
+
+  # # SETTINGS
+  type settings_frame = { type: :settings, payload: Array[[Symbol | Integer, Integer]] }
+
+  # # WINDOW_UPDATE
+  type window_update_frame = { type: :window_update, increment: Integer }
+
+  # # PRIORITY
+  type priority_frame = { dependency: Integer, exclusive: bool, weight: Integer }
+
+  # # ALTSVC
+  type altsvc_frame = { type: :altsvc, max_age: Integer, port: Integer, proto: "String", host: String }
+
+  # # ORIGIN
+  type origin_frame = { type: :origin, origin: Array[String] }
+
+  # # PING
+  type ping_frame = { type: :ping, payload: String, length: Integer }
+
+  # # GOAWAY
+  type goaway_frame = { type: :goaway, last_stream: Integer, error: Symbol? }
+
+  # type frame = common_frame & (headers_frame | data_frame | push_promise_frame |
+  #              settings_frame | window_update_frame | priority_frame | altsvc_frame |
+  #              origin_frame | ping_frame | goaway_frame)
+
+  type frame_key = :type | :flags | :stream | :padding | :ignore |
+                   # headers
+                   :method | :trailer | :content_length | :status |
+                   # data, settings, ping
+                   :payload | :length |
+                   # promise
+                   :promise_stream |
+                   # window_update
+                   :increment |
+                   # priority
+                   :dependency | :exclusive | :weight |
+                   # altsvc
+                   :max_age | :port | :proto | :host |
+                   # origin
+                   :origin |
+                   # goaway
+                   :last_stream | :error
+
+  type frame_value = Integer |
+                     Symbol | # type (:data, :headers)
+                     Array[Symbol] |
+                     String |
+                     bool |
+                     Array[String] |
+                     Array[[Symbol | Integer, Integer]] |
+                     Enumerable[header_pair] |
+                     nil
+
+  type frame = Hash[frame_key, frame_value]
+end

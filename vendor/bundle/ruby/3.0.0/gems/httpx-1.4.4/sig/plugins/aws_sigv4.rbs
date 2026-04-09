@@ -1,0 +1,78 @@
+module HTTPX
+  module Plugins
+
+    interface _SigV4Credentials
+      def username: () -> String
+      def password: () -> String
+      def security_token: () -> String?
+    end
+
+    module AWSSigV4
+
+      class Credentials < Struct[[String, String, String?]]
+        attr_reader username: String
+        attr_reader password: String
+        attr_reader security_token: String?
+      end
+
+
+      class Signer
+        @credentials: Object & _SigV4Credentials
+        @service: String
+        @region: String
+        @unsigned_headers: Set[String]
+        @apply_checksum_header: bool
+        @provider_prefix: String
+        @header_provider_field: String
+        @algorithm: String
+
+        def sign!: (Request & RequestMethods request) -> void
+
+        def self.new: (instance) -> instance
+                    | (**untyped params) -> instance
+        private
+
+        def initialize: (
+          service: String,
+          region: String,
+          ?credentials: _SigV4Credentials,
+          ?username: String,
+          ?password: String,
+          ?security_token: String,
+          ?provider_prefix: String,
+          ?header_provider_field: String,
+          ?unsigned_headers: Array[String],
+          ?apply_checksum_header: bool,
+          ?algorithm: String
+        ) -> untyped
+
+
+        def hexdigest: (Request::Body value) -> String
+
+        def hmac: (String key, String value) -> String
+
+        def hexhmac: (String key, String value) -> String
+      end
+
+
+      interface _SigV4Options
+        def sigv4_signer: () -> Signer?
+      end
+
+      def self.extra_options: (Options) -> (Options & _SigV4Options)
+      def self.load_dependencies: (singleton(Session)) -> void
+
+      module InstanceMethods
+        def aws_sigv4_authentication: (**untyped) -> instance
+      end
+
+      module RequestMethods
+        def canonical_path: () -> String
+
+        def canonical_query: () -> String
+      end
+    end
+
+    type awsSigV4Session = Session & AWSSigV4::InstanceMethods
+  end
+end

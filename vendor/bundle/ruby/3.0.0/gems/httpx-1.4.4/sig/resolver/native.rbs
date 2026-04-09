@@ -1,0 +1,74 @@
+module HTTPX
+  module Resolver
+    class Native < Resolver
+      extend Forwardable
+      include _ToIO
+
+      DEFAULTS: Hash[Symbol, untyped]
+      DNS_PORT: Integer
+
+      @options: Options
+      @ns_index: Integer
+      @nameserver: Array[String]
+      @socket_type: :udp | :tcp
+      @ndots: Integer
+      @start_timeout: Float?
+      @search: Array[String]
+      @_timeouts: Array[Numeric]
+      @timeouts: Hash[String, Array[Numeric]]
+      @connections: Array[Connection]
+      @read_buffer: String
+      @write_buffer: Buffer
+      @large_packet: Buffer?
+      @io: UDP | TCP
+      @name: String?
+
+      attr_reader state: Symbol
+
+      def call: () -> void
+
+      def interests: () -> (:r | :w | nil)
+
+      def <<: (Connection) -> void
+
+      def timeout: () -> Numeric?
+
+      def handle_socket_timeout: (Numeric interval) -> void
+
+      private
+
+      def initialize: (ip_family family, options options) -> void
+
+      def calculate_interests: () -> (:r | :w | nil)
+
+      def consume: () -> void
+
+      def schedule_retry: () -> void
+
+      def do_retry: (String host, Connection connection, Numeric interval) -> void
+
+      def dread: (Integer) -> void
+               | () -> void
+
+      def dwrite: () -> void
+
+      def parse: (String) -> void
+
+      def resolve: (?Connection connection, ?String hostname) -> void
+
+      def generate_candidates: (String) -> Array[String]
+
+      def build_socket: () -> (UDP | TCP)
+
+      def downgrade_socket: () -> void
+
+      def transition: (Symbol nextstate) -> void
+
+      def handle_error: (NativeResolveError | StandardError) -> void
+
+      def reset_hostname: (String hostname, ?connection: Connection, ?reset_candidates: bool) -> void
+
+      def close_or_resolve: () -> void
+    end
+  end
+end

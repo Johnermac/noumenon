@@ -1,0 +1,56 @@
+module HTTPX
+  class Timers
+    type callback = ^() -> void
+
+    @intervals: Array[Interval]
+    @next_interval_at: Float
+
+    def after: (Numeric interval_in_secs, ^() -> void) -> Timer
+             | (Numeric interval_in_secs) { () -> void } -> Timer
+
+    def wait_interval: () -> Numeric?
+
+    def fire: (?TimeoutError error) -> void
+
+    def initialize: () -> void
+
+    class Interval
+      include Comparable
+
+      attr_reader interval: Numeric
+
+      @callbacks: Array[callback]
+      @on_empty: callback?
+
+
+      def on_empty: () { () -> void } -> void
+
+      def cancel: () -> void
+
+      def to_f: () -> Float
+
+      def <<: (callback) -> void
+
+      def delete: (callback) -> void
+
+      def elapse: (Numeric elapsed) -> Numeric
+
+      def elapsed?: () -> bool
+
+      def no_callbacks?: () -> bool
+
+      private
+
+      def initialize: (Numeric interval) -> void
+    end
+
+    class Timer
+      @interval: Interval
+      @callback: callback
+
+      def initialize: (Interval interval, callback callback) -> void
+
+      def cancel: () -> void
+    end
+  end
+end

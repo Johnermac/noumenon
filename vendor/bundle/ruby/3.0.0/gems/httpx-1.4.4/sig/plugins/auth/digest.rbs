@@ -1,0 +1,25 @@
+module HTTPX
+  module Plugins
+    module Authentication
+      class Digest
+        @user: String
+        @password: String
+        @hashed: bool
+
+        def can_authenticate?: (String? authenticate) -> boolish
+
+        def authenticate: (Request request, String authenticate) -> String
+
+        private
+
+        def generate_header: (String meth, String uri, String authenticate) -> String
+
+        def initialize: (string user, string password, ?hashed: bool, **untyped) -> void
+
+        def make_cnonce: () -> String
+
+        def next_nonce: () -> Integer
+      end
+    end
+  end
+end

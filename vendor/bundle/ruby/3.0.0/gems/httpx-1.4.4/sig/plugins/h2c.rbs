@@ -1,0 +1,19 @@
+module HTTPX
+  module Plugins
+    module H2C
+      VALID_H2C_VERBS: Array[verb]
+
+      def self.load_dependencies: (*untyped) -> void
+      def self.configure: (singleton(Session)) -> void
+      def self.call: (Connection, Request, response) -> void
+
+      class H2CParser < Connection::HTTP2
+        def upgrade: (Request, Response) -> void
+      end
+
+      module ConnectionMethods
+        def upgrade_to_h2c: (Request, Response) -> void
+      end
+    end
+  end
+end

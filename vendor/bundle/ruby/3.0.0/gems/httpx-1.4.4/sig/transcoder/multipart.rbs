@@ -1,0 +1,96 @@
+module HTTPX
+  module Transcoder
+    module Multipart
+      interface _MultipartInput
+        def filename: () -> String
+        def content_type: () -> String
+        def read: (?int? length, ?string? output) -> String?
+      end
+
+      MULTIPART_VALUE_COND: ^(_Reader | record_multipart_value value) -> bool
+
+      type multipart_value = string | Pathname | File | Tempfile | _Reader
+
+      type record_multipart_value = { content_type: String, filename: String, body: multipart_value } |
+                                    { content_type: String, body: multipart_value }
+
+      type multipart_nested_value = multipart_value | _ToAry[multipart_value] | _ToHash[string, multipart_value]
+
+      class Encoder
+        @boundary: String
+        @part_index: Integer
+        @buffer: String
+
+        @form: Enumerable[[Symbol | string, Object & multipart_nested_value]]
+        @parts: Array[Object & _Reader]
+
+        attr_reader bytesize: Integer
+
+        def content_type: () -> String
+
+        def to_s: () -> String
+
+        def read: (?int? length, ?string? buffer) -> String?
+
+        def rewind: () -> void
+
+        private
+
+        def to_parts: (Enumerable[[Symbol | string, multipart_nested_value]] multipart_data) -> Array[_Reader]
+
+        def initialize: (Enumerable[[Symbol | string, multipart_nested_value]] multipart_data) -> untyped
+
+        def header_part: (string key, String content_type, String? filename) -> StringIO
+
+        def read_chunks: (String buffer, ?int? length) -> void
+
+        def read_from_part: (?int? max_length) -> String?
+      end
+
+      class Decoder
+        CRLF: String
+        BOUNDARY_RE: Regexp
+        MULTIPART_CONTENT_TYPE: Regexp
+        MULTIPART_CONTENT_DISPOSITION: Regexp
+        MULTIPART_CONTENT_ID: Regexp
+        WINDOW_SIZE: Integer
+
+        @state: :idle | :part_header | :part_body | :parse_boundary | :done
+        @buffer: String
+        @parts: Hash[String, untyped]
+        @boundary: String
+        @intermediate_boundary: String
+
+        def call: (Response response, *untyped) -> Hash[String, untyped]
+
+        private
+
+        def initialize: (Response response) -> void
+
+        def parse: () -> void
+      end
+
+      class FilePart #  < SimpleDelegator
+        attr_reader original_filename: String
+        attr_reader content_type: String
+
+        # @file: Tempfile
+
+        # private
+
+        def initialize: (String filename, String content_type) -> void
+      end
+
+      module Part
+        def self?.call: [U] (Object & _MultipartInput multipart_input) -> [U, String, String]
+                      | (multipart_nested_value value) -> ([StringIO, String, String?] | [File | Tempfile, String, String])
+      end
+
+      module MimeTypeDetector
+        DEFAULT_MIMETYPE: String
+
+        def self?.call: (::IO | Tempfile file, String filename) -> String?
+      end
+    end
+  end
+end

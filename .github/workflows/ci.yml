@@ -1,4 +1,4 @@
-name: Secure CI Pipeline
+name: CI
 
 on:
   push:
@@ -15,7 +15,36 @@ env:
   IMAGE_NAME: johnermac/noumenon
 
 jobs:
+  # -----------------------------
+  # 1. Application correctness gate
+  # -----------------------------
+  test:
+    name: Test application
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run test suite
+        env:
+          RAILS_ENV: test
+          REDIS_URL: redis://localhost:6379/0
+          SCREENSHOT_ENABLED: false
+        run: bundle exec rails test
+
+  # -----------------------------
+  # 2. Static analysis / security checks
+  # -----------------------------
   security:
+    name: Security checks
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -56,8 +85,15 @@ jobs:
           sarif_file: semgrep.sarif
           category: semgrep
 
-  build:
-    needs: security
+  # -----------------------------
+  # 3. Build and scan Docker images
+  # Only runs after tests and security checks pass.
+  # -----------------------------
+  images:
+    name: Build Docker images
+    needs:
+      - test
+      - security
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -104,7 +140,9 @@ jobs:
           category: grype-image
 
       # -----------------------------
-      # Push to Docker Hub
+      # Publish to Docker Hub      
+      # Optional safeguard for later:
+      # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       # -----------------------------
       # - uses: docker/login-action@v3
       #   with:

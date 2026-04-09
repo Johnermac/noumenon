@@ -1,0 +1,143 @@
+module HTTPX
+  class Options
+    # include _ToHash
+
+    BUFFER_SIZE: Integer
+    WINDOW_SIZE: Integer
+    MAX_BODY_THRESHOLD_SIZE: Integer
+    CONNECT_TIMEOUT: Integer
+    READ_TIMEOUT: Integer
+    WRITE_TIMEOUT: Integer
+    REQUEST_TIMEOUT: Integer
+    OPERATION_TIMEOUT: Integer
+    KEEP_ALIVE_TIMEOUT: Integer
+    SETTINGS_TIMEOUT: Integer
+    CLOSE_HANDSHAKE_TIMEOUT: Integer
+    DEFAULT_OPTIONS: Hash[Symbol, untyped]
+    REQUEST_BODY_IVARS: Array[Symbol]
+
+    type timeout_type = :connect_timeout | :settings_timeout | :close_handshake_timeout | :operation_timeout | :keep_alive_timeout | :read_timeout | :write_timeout | :request_timeout
+    type timeout = Hash[timeout_type, Numeric?]
+
+    def self.new: (?options) -> instance
+
+    # headers
+    attr_reader uri: URI?
+
+    # headers
+    attr_reader headers: Headers?
+
+    # timeout
+    attr_reader timeout: timeout
+
+    # http2_settings
+    attr_reader http2_settings: Hash[Symbol, Integer | bool]
+
+    # max_concurrent_requests
+    attr_reader max_concurrent_requests: Integer?
+
+    # max_requests
+    attr_reader max_requests: Numeric?
+
+    # window_size
+    attr_reader window_size: Integer
+
+    # buffer_size
+    attr_reader buffer_size: Integer
+
+    # body_threshold_size
+    attr_reader body_threshold_size: Integer
+
+    # transport
+    attr_reader transport: io_type | nil
+
+    # addresses
+    attr_reader addresses: Array[ipaddr]?
+
+    # supported_compression_formats
+    attr_reader supported_compression_formats: Array[String]
+
+    # compress_request_body
+    attr_reader compress_request_body: bool
+
+    # decompress_response_body
+    attr_reader decompress_response_body: bool
+
+    # origin
+    attr_reader origin: URI::Generic?
+
+    # base_path
+    attr_reader base_path: String?
+
+    # ssl
+
+    # http2_settings
+
+
+    # classes
+    attr_reader connection_class: singleton(Connection)
+
+    attr_reader pool_class: singleton(Pool)
+
+    attr_reader request_class: singleton(Request)
+
+    attr_reader response_class: singleton(Response)
+
+    attr_reader headers_class: singleton(Headers)
+
+    attr_reader request_body_class: singleton(Request::Body)
+
+    attr_reader response_body_class: singleton(Response::Body)
+
+    attr_reader resolver_class: Symbol | Class
+
+    attr_reader ssl: Hash[Symbol, untyped]
+
+    # io
+    type io_option = _ToIO | Hash[String, _ToIO]
+    attr_reader io: io_option?
+
+    # fallback_protocol
+    attr_reader fallback_protocol: String
+
+    # debug
+    attr_reader debug: _IOLogger?
+
+    # debug_level
+    attr_reader debug_level: Integer
+
+    # persistent
+    attr_reader persistent: bool
+
+    # resolver_options
+    attr_reader resolver_options: Hash[Symbol, untyped]
+
+    # resolver_options
+    attr_reader pool_options: pool_options
+
+    # ip_families
+    attr_reader ip_families: Array[ip_family]
+
+    def ==: (Options other) -> bool
+
+    def options_equals?: (Options other, ?Array[Symbol] ignore_ivars) -> bool
+
+    def merge: (_ToHash[Symbol, untyped] other) -> instance
+
+    def to_hash: () -> Hash[Symbol, untyped]
+
+    def extend_with_plugin_classes: (Module pl) -> void
+
+    private
+
+    REQUEST_IVARS: Array[Symbol]
+
+    def initialize: (?options options) -> void
+
+    def do_initialize: (?options options) -> void
+
+    def access_option: (Hash[Symbol, untyped] | Object | nil obj, Symbol k, Hash[Symbol, Symbol]? ivar_map) -> untyped
+  end
+
+  type options = Options | Hash[Symbol, untyped]
+end

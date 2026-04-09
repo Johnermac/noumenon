@@ -1,0 +1,24 @@
+module HTTPX
+  module Transcoder
+    module Body
+      class Error < HTTPX::Error
+      end
+
+      class Encoder #  < SimpleDelegator
+        @raw: Object & bodyIO
+
+        def bytesize: () -> (Integer | Float)
+
+        def content_type: () -> String
+
+        def to_s: () -> String
+
+        private
+
+        def initialize: (untyped body) -> untyped
+      end
+
+      def self?.encode: (bodyIO body) -> Encoder
+    end
+  end
+end

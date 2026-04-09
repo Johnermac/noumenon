@@ -1,0 +1,27 @@
+module HTTPX
+  class UNIX < TCP
+
+    attr_reader path: String
+
+    alias host path
+
+    @hostname: String
+
+    @options: Options
+
+    @fallback_protocol: String
+
+    @keep_open: bool
+
+    @io: Socket
+
+    def initialize: (http_uri origin, String? path, Options options) -> void
+
+    def connect: () -> void
+
+    def expired?: () -> bool
+    private
+
+    def build_socket: () -> Socket
+  end
+end

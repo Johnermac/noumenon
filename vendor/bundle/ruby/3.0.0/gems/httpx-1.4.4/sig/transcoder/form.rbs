@@ -1,0 +1,34 @@
+module HTTPX::Transcoder
+  type form_value = string
+
+  type form_nested_value = form_value | _ToAry[form_value] | _ToHash[string, form_value]
+
+  type urlencoded_input = Enumerable[[_ToS, form_nested_value | Multipart::multipart_nested_value]]
+
+  module Form
+    PARAM_DEPTH_LIMIT: Integer
+
+    def self?.encode: (urlencoded_input form) -> (Encoder | Multipart::Encoder)
+    def self?.decode: (HTTPX::Response response) -> _Decoder
+    def self?.multipart?: (form_nested_value | Multipart::multipart_nested_value data) -> bool
+
+    class Encoder
+      extend Forwardable
+      include _ToS
+
+      @raw: String
+
+      def bytesize: () -> Integer
+
+      def content_type: () -> String
+
+      private
+
+      def initialize: (urlencoded_input form) -> untyped
+    end
+
+    module Decoder
+      def self?.call: (HTTPX::Response response, *untyped) -> Hash[String, untyped]
+    end
+  end
+end

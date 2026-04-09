@@ -1,0 +1,49 @@
+module HTTPX
+  class Socks5Error < HTTPProxyError
+  end
+
+  module Plugins
+    module Proxy
+      module Socks5
+        VERSION: Integer
+        NOAUTH: Integer
+        PASSWD: Integer
+        NONE: Integer
+        CONNECT: Integer
+        IPV4: Integer
+        DOMAIN: Integer
+        IPV6: Integer
+        SUCCESS: Integer
+
+        module ConnectionMethods
+          def __socks5_proxy_connect: () ->  void
+          def __socks5_on_packet: (String packet) ->  void
+          def __socks5_check_version: (int) -> void
+          def __on_socks5_error: (string) -> void
+        end
+
+        class SocksParser
+          include HTTPX::Callbacks
+
+          @buffer: Buffer
+          @options: Options
+
+          def close: () -> void
+          def consume: (*untyped) -> void
+          def empty: () -> bool
+          def <<: (string) -> void
+
+          private
+
+          def initialize: (Buffer buffer, Options options) -> untyped
+        end
+
+        module Packet
+          def self?.negotiate: (Parameters parameters) -> String
+          def self?.authenticate: (Parameters parameters) -> String
+          def self?.connect: (uri uri) -> String
+        end
+      end
+    end
+  end
+end

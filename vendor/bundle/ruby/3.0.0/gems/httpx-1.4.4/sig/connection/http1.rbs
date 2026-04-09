@@ -1,0 +1,83 @@
+module HTTPX
+  class Connection::HTTP1
+    include Callbacks
+    include Loggable
+
+    UPCASED: Hash[String, String]
+    MAX_REQUESTS: Integer
+    CRLF: String
+
+    attr_reader pending: Array[Request]
+    attr_reader requests: Array[Request]
+
+    attr_accessor max_concurrent_requests: Integer
+
+    @options: Options
+    @max_requests: Integer
+    @parser: Parser::HTTP1
+    @buffer: Buffer
+    @version: [Integer, Integer]
+    @handshake_completed: bool
+    @pipelining: bool
+
+    @request: Request?
+
+    def interests: () -> io_interests?
+
+    def reset: () -> void
+
+    def close: () -> void
+
+    def empty?: () -> bool
+
+    def exhausted?: () -> bool
+
+    def <<: (string) -> void
+
+    def send: (Request) -> void
+
+    def consume: () -> void
+
+    def handle_error: (StandardError ex, ?Request? request) -> void
+
+    def on_start: () -> void
+
+    def on_headers: (Hash[String, Array[String]] headers) -> void
+
+    def on_trailers: (Hash[String, Array[String]] headers) -> void
+
+    def on_data: (String chunk) -> void
+
+    def on_complete: () -> void
+
+    def dispatch: () -> void
+
+    def ping: () -> void
+
+    def timeout: () -> Numeric?
+
+    private
+
+    def initialize: (Buffer buffer, Options options) -> untyped
+
+    def manage_connection: (Request request, Response response) -> void
+
+    def disable: () -> void
+
+    def disable_pipelining: () -> void
+
+    def set_protocol_headers: (Request request) -> _Each[[String, String]]
+
+    def handle: (Request request) -> void
+
+    def join_headers: (Request request) -> void
+
+    def join_trailers: (Request request) -> void
+
+    def join_headers2: (_Each[[String, String]] headers) -> void
+
+    def join_body: (Request request) -> void
+
+    def capitalized: (String field) -> String
+  end
+end
