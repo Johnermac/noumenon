@@ -1,0 +1,26 @@
+module HTTPX
+  module Plugins
+    module Cookies
+      type jar = Jar | _Each[Jar::cookie]
+
+      interface _CookieOptions
+        def cookies: () -> Jar?
+
+        def merge_cookie_in_jar: (Array[String] cookies, Jar jar) -> void
+      end
+
+      def self.extra_options: (Options) -> (Options & _CookieOptions)
+
+      module InstanceMethods
+        def cookies: () -> Jar
+      end
+
+      module HeadersMethods
+        def set_cookie: (Array[Cookie]) -> void
+      end
+    end
+
+    type sessionCookies = Session & Cookies::InstanceMethods
+    type headersCookies = Headers & Cookies::HeadersMethods
+  end
+end

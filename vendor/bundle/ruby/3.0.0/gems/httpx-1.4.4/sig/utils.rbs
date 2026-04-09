@@ -1,0 +1,19 @@
+module HTTPX
+  module Utils
+    TOKEN: Regexp
+    VALUE: Regexp
+    FILENAME_REGEX: Regexp
+    FILENAME_EXTENSION_REGEX: Regexp
+    URIParser: URI::RFC2396_Parser
+
+    def self?.parse_retry_after: (String) -> Numeric
+
+    def self?.now: () -> Float
+
+    def self?.elapsed_time: (Integer | Float monotonic_time) -> Float
+
+    def self?.to_uri: (generic_uri uri) -> URI::Generic
+
+    def self?.get_filename: (String header) -> String?
+  end
+end

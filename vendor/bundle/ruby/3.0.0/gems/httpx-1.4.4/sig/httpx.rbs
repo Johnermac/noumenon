@@ -1,0 +1,23 @@
+module HTTPX
+  extend Chainable
+
+  EMPTY: Array[untyped]
+
+  VERSION: String
+
+  type http_uri = URI::HTTP | URI::HTTPS
+  type uri = http_uri | string
+  type generic_uri = String | URI::Generic
+
+  type verb = String
+
+  type request_params = Hash[Symbol, untyped]
+
+  type ip_family = Integer #Socket::AF_INET6 | Socket::AF_INET
+
+  module Plugins
+    def self?.load_plugin: (Symbol) -> Module
+
+    def self?.register_plugin: (Symbol, Module) -> void
+  end
+end

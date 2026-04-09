@@ -1,0 +1,27 @@
+module HTTPX
+  class Buffer
+    extend Forwardable
+
+    include _ToS
+    include _ToStr
+
+    @buffer: String
+
+    attr_reader limit: Integer
+
+    def full?: () -> bool
+    def shift!: (Integer) -> void
+    def capacity: () -> Integer
+
+    # delegated
+    def <<: (string data) -> String
+    def empty?: () -> bool
+    def bytesize: () -> (Integer | Float)
+    def clear: () -> void
+    def replace: (string) -> void
+
+    private
+
+    def initialize: (Integer limit) -> untyped
+  end
+end

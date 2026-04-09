@@ -1,0 +1,24 @@
+module HTTPX
+  module Plugins
+    module Upgrade
+      interface _Upgrader
+        def call: (Connection connection, Request request, Response response) -> void
+      end
+
+      def self.configure: (singleton(Session)) -> void
+
+      interface _UpgradeOptions
+        def upgrade_handlers: () -> Hash[String, _Upgrader]
+      end
+
+      def self.extra_options: (Options) -> (Options & _UpgradeOptions)
+
+      module ConnectionMethods
+        attr_reader upgrade_protocol: String?
+        attr_reader hijacked: boolish
+
+        def hijack_io: () -> void
+      end
+    end
+  end
+end

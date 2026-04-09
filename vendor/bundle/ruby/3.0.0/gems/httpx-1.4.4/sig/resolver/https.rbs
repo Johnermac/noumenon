@@ -1,0 +1,44 @@
+module HTTPX
+  module Resolver
+    class HTTPS < Resolver
+      NAMESERVER: String
+
+      DEFAULTS: Hash[Symbol, untyped]
+      FAMILY_TYPES: Hash[singleton(Resolv::DNS::Resource), String]
+
+      attr_reader family: ip_family
+
+      @options: Options
+      @requests: Hash[Request, String]
+      @connections: Array[Connection]
+      @uri: http_uri
+      @uri_addresses: Array[String]?
+      @resolver: Resolv::DNS
+      @resolver_connection: Connection
+
+      attr_writer pool: Pool
+
+      def <<: (Connection) -> void
+
+      private
+
+      def initialize: (ip_family family, options options) -> void
+
+      def resolver_connection: () -> Connection
+
+      def resolve: (?Connection connection, ?String? hostname) -> void
+
+      def on_response: (Request, response) -> void
+
+      def parse: (Request request, Response response) -> void
+
+      def parse_addresses: (Array[dns_result] answers, Request request) -> void
+
+      def build_request: (String hostname) -> Request
+
+      def decode_response_body: (Response) -> dns_decoding_response
+
+      def reset_hostname: (String hostname, ?reset_candidates: bool) -> Connection?
+    end
+  end
+end

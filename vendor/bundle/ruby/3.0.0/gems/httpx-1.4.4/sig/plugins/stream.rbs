@@ -1,0 +1,50 @@
+module HTTPX
+  module Plugins
+    module Stream
+      module InstanceMethods
+        private
+
+        def request: (*Request, ?stream: bool, **untyped?) -> (response | Array[response] | StreamResponse)
+                   | (*untyped, ?stream: bool, **untyped?) -> (response | Array[response] | StreamResponse)
+      end
+
+      module RequestMethods
+        attr_accessor stream: StreamResponse?
+      end
+
+      module ResponseMethods
+        def stream: () -> StreamResponse?
+      end
+
+    end
+
+    type sessionStream = Session & Stream::InstanceMethods
+  end
+
+  class StreamResponse
+    include _ToS
+
+    type streamRequest = Request & Plugins::Stream::RequestMethods
+
+    @request: streamRequest
+    @options: Options
+    @session: Plugins::sessionStream
+    @response_enum: Enumerator[String]?
+    @buffered_chunks: Array[String]
+    @on_chunk: ^(String) -> void | nil
+
+    def each: () { (String) -> void } -> void
+            | () -> Enumerable[String]
+
+    def each_line: () { (String) -> void } -> void
+                 | () -> Enumerable[String]
+
+    def on_chunk: (string) -> void
+
+    def initialize: (streamRequest, Plugins::sessionStream) -> void
+
+    private
+
+    def response: () -> response
+  end
+end

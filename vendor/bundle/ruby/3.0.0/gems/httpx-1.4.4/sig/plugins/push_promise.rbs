@@ -1,0 +1,23 @@
+module HTTPX
+  module Plugins
+    module PushPromise
+      module ResponseMethods
+        @__pushed: bool?
+
+        def pushed?: () -> boolish
+        def mark_as_pushed!: () -> void
+      end
+
+      module InstanceMethods
+        @promise_headers: Hash[::HTTP2::Stream, Request]?
+        private
+
+        def promise_headers: () -> Hash[::HTTP2::Stream, Request]
+        def __on_promise_request: (Connection::HTTP2, ::HTTP2::Stream, headers_input) -> void
+        def __on_promise_response: (Connection::HTTP2, ::HTTP2::Stream, headers_input) -> void
+      end
+    end
+
+    type sessionPushPromise = Session & PushPromise::InstanceMethods
+  end
+end

@@ -1,0 +1,47 @@
+module HTTPX
+  InsecureRedirectError: singleton(Error)
+
+  module Plugins
+    module FollowRedirects
+      MAX_REDIRECTS: Integer
+      REDIRECT_STATUS: Range[Integer]
+      REQUEST_BODY_HEADERS: Array[String]
+
+      type redirect_request = Request & RequestMethods
+
+      interface _FollowRedirectsOptions
+        def max_redirects: () -> Integer?
+
+        def follow_insecure_redirects: () -> bool?
+
+        def allow_auth_to_other_origins: () -> bool?
+
+        def redirect_on: () -> (^(http_uri) -> boolish | nil)
+      end
+
+      def self.extra_options: (Options) -> (Options & _FollowRedirectsOptions)
+
+      module InstanceMethods
+        def max_redirects: (_ToI) -> instance
+
+        def handle_after_redirect_request: (http_uri original_uri, http_uri redirect_uri, Request request, Options & _FollowRedirectsOptions options) -> void
+
+        def __get_location_from_response: (Response) -> http_uri
+      end
+
+      module RequestMethods
+        attr_accessor root_request: instance?
+
+        @redirect_request: redirect_request
+
+        def redirect_request: () -> redirect_request
+
+        def redirect_request=: (redirect_request req) -> void
+
+        def max_redirects: () -> Integer
+      end
+    end
+
+    type sessionFollowRedirects = Session & FollowRedirects::InstanceMethods
+  end
+end

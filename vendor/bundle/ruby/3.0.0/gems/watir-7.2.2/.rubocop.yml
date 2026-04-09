@@ -1,0 +1,105 @@
+inherit_from: .rubocop_todo.yml
+
+require:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 2.7
+  NewCops: enable
+  Exclude:
+    - 'lib/watir/elements/html_elements.rb'
+    - 'lib/watir/elements/svg_elements.rb'
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Metrics/AbcSize:
+  Max: 22
+  Exclude:
+    - 'lib/watir/locators/element/selector_builder.rb'
+    - 'lib/watir/locators/element/selector_builder/*.rb'
+    - 'lib/watir/generator/base/generator.rb'
+    - 'spec/locator_spec_helper.rb'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'support/doctest_helper.rb'
+    - 'watir.gemspec'
+    - 'Rakefile'
+
+Metrics/ClassLength:
+  Max: 93
+  Exclude:
+    - 'lib/watir/capabilities.rb'
+    - 'lib/watir/locators/element/matcher.rb'
+    - 'lib/watir/locators/element/selector_builder.rb'
+    - 'lib/watir/locators/element/selector_builder/xpath.rb'
+    - 'lib/watir/browser.rb'
+    - 'lib/watir/window.rb'
+    - 'lib/watir/elements/element.rb'
+    - 'lib/watir/elements/select.rb'
+    - 'lib/watir/generator/base/spec_extractor.rb'
+    - 'lib/watir/element_collection.rb'
+    - 'spec/**/*_spec.rb'
+
+Metrics/CyclomaticComplexity:
+  Max: 9
+  Exclude:
+    - 'lib/watir/locators/element/selector_builder.rb'
+
+# Configuration parameters: CountComments.
+Metrics/MethodLength:
+  Max: 18
+  Exclude:
+    - 'lib/watir/locators/element/selector_builder.rb'
+    - 'lib/watir/locators/element/selector_builder/regexp_disassembler.rb'
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/PerceivedComplexity:
+  Max: 10
+
+RSpec/AnyInstance:
+  Enabled: false
+
+RSpec/BeforeAfterAll:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Exclude:
+    - 'spec/watirspec/capabilities_spec.rb'
+
+RSpec/NoExpectationExample:
+  Exclude:
+    - 'spec/watirspec/cookies_spec.rb'
+
+Style/BlockDelimiters:
+  EnforcedStyle: braces_for_chaining
+
+Style/CommentedKeyword:
+  Enabled: false
+
+# truthy is not true
+Style/DoubleNegation:
+  Enabled: false
+
+Style/GlobalVars:
+  AllowedVariables:
+    - $browser
+
+# Need to add new keys into hash during iteration
+Style/HashEachMethods:
+  Enabled: false
+
+Style/OptionalBooleanParameter:
+  Enabled: false
