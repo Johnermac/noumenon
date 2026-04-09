@@ -1,6 +1,0 @@
-module HTTPX
-  type io_type = "udp" | "tcp" | "ssl" | "unix"
-
-  module IO
-  end
-end
