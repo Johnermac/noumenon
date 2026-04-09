@@ -10,6 +10,7 @@ class DownloadsControllerTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
+
     Object.send(:remove_const, :REDIS)
     Object.const_set(:REDIS, @original_redis)
   end
@@ -23,6 +24,7 @@ class DownloadsControllerTest < ActionDispatch::IntegrationTest
 
   test "screenshot_zip_info returns password when zip is ready" do
     site = "https://example.com"
+
     @redis.set_string("screenshot_zip_password_#{site}", "secret123")
 
     get "/download/screenshot_zip_info", params: { site: site }

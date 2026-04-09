@@ -26,6 +26,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
   test "create returns unprocessable entity when site is missing" do
     with_stubbed_reset_sidekiq do
       post "/scans/create", params: { scan_directories: true }
+
     end
 
     assert_response :unprocessable_entity
@@ -48,6 +49,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
         }
       ensure
         ENV["SCREENSHOT_ENABLED"] = original_value
+
       end
     end
 
@@ -60,6 +62,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
       "false",
       "true",
       "false",
+
       false
     ], ScanWorker.jobs.first["args"]
   end
@@ -76,6 +79,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
     assert_equal "No results found for #{site}", response.parsed_body["error"]
+
   end
 
   test "show returns combined results with unique links and emails" do
@@ -87,6 +91,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     @redis.add_set("links_#{site}", "https://example.com/about", "https://example.com/about")
     @redis.add_set("emails_#{site}", "admin@example.com", "admin@example.com")
 
+
     get "/scans/show", params: { site: site }
 
     assert_response :success
@@ -96,5 +101,6 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["api.example.com"], response.parsed_body["active_subdomains"]
     assert_equal ["https://example.com/about"], response.parsed_body["extracted_links"]
     assert_equal ["admin@example.com"], response.parsed_body["extracted_emails"]
+
   end
 end
