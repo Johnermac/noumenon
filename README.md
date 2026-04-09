@@ -13,7 +13,9 @@ It scans and validates subdomains, directories, links, and emails — and takes 
   - Queue-based architecture with Redis + Sidekiq   
   - Dark-themed web UI
   - Docker support:
+
         :latest (~210MB) full version with screenshots
+        
         :slimmed (~90MB) minimal version without screenshot feature
 
 

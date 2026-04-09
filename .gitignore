@@ -42,4 +42,5 @@
 /codex/*
 !/codex/.keep
 .codex/*
-!.codex/.keep
+
+

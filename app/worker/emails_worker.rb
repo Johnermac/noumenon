@@ -3,6 +3,7 @@ require "nokogiri"
 
 class EmailsWorker
   include Sidekiq::Worker
+  RESULT_TTL = 7200
 
   def perform(url, site, total_urls)
     begin   
@@ -44,9 +45,9 @@ class EmailsWorker
 
     # ---------------------------- CLEANUP ----------------------------------------
 
-    REDIS.expire("emails_#{site}", 600)
-    REDIS.expire("processed_emails_#{site}", 300)
-    REDIS.expire("emails_scan_complete_#{site}", 300)
+    REDIS.expire("emails_#{site}", RESULT_TTL)
+    REDIS.expire("processed_emails_#{site}", RESULT_TTL)
+    REDIS.expire("email_scan_complete_#{site}", RESULT_TTL)
     
     puts "\n  Email Results for #{site}:"
     puts "    \t✅ Found Emails: #{valid_emails.join(', ')}" if valid_emails.any? 
