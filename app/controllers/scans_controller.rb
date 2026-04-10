@@ -4,8 +4,6 @@ require 'uri'
 require 'httpx'
 
 class ScansController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:create] 
-
   def create
 
     reset_sidekiq()
