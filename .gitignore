@@ -44,3 +44,24 @@
 .codex/*
 !.codex/.keep
 
+# Ignore editor and OS temporary files.
+*.swp
+*~
+.DS_Store
+.bundle/
+
+# Ignore Terraform state and local files.
+/infra/bootstrap/.terraform/
+/infra/bootstrap/.terraform.lock.hcl
+/infra/bootstrap/*.tfstate
+/infra/bootstrap/*.tfstate.*
+/infra/bootstrap/crash.log
+/infra/terraform/.terraform/
+/infra/terraform/.terraform.lock.hcl
+/infra/terraform/*.tfstate
+/infra/terraform/*.tfstate.*
+/infra/terraform/crash.log
+
+# Ignore Terraform docs and example files.
+/infra/terraform/README.md
+/infra/terraform/*.tfvars.example
