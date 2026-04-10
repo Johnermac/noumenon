@@ -20,6 +20,7 @@ jobs:
   # -----------------------------
   test:
     name: Test application
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -46,6 +47,7 @@ jobs:
   # -----------------------------
   security:
     name: Security checks
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -88,10 +90,11 @@ jobs:
 
   # -----------------------------
   # 3. Build and scan Docker images
-  # Only runs after tests and security checks pass.
+  # PR verification path: only runs after tests and security checks pass.
   # -----------------------------
   images:
     name: Build Docker images
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     needs:
       - test
       - security
@@ -140,22 +143,34 @@ jobs:
           sarif_file: grype-results.sarif
           category: grype-image
 
-      # -----------------------------
-      # Publish test image to Docker Hub
-      # Safe rollout: only publish the slim image under a test tag,
-      # and only on direct pushes to main after CI passes.
-      # -----------------------------
+  # -----------------------------
+  # 4. Release path
+  # Pushes to main only build and publish the test tag.
+  # This assumes PR checks already validated the code before merge.
+  # -----------------------------
+  release:
+    name: Publish slimmed test image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build slimmed image
+        run: |
+          docker build \
+            --target runtime-slimmed \
+            -t $IMAGE_NAME:slimmed_test \
+            .
+
       - name: Login to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag slimmed image as test image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: docker tag $IMAGE_NAME:slimmed $IMAGE_NAME:slimmed_test
-
       - name: Push slimmed test image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: docker push $IMAGE_NAME:slimmed_test

@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1
 ARG RUBY_VERSION=3.2.11
+ARG ALPINE_VERSION=3.23
 
 # -------------------------
 # Build stage
 # -------------------------
-FROM ruby:$RUBY_VERSION-alpine AS build
+FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS build
 WORKDIR /app
 
 ENV BUNDLE_PATH=/usr/local/bundle \
@@ -27,7 +28,7 @@ COPY . .
 # -------------------------
 # Shared runtime base
 # -------------------------
-FROM ruby:$RUBY_VERSION-alpine AS runtime-base
+FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS runtime-base
 WORKDIR /app
 
 ENV RAILS_ENV=development \
