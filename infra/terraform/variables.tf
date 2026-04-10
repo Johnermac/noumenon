@@ -37,6 +37,11 @@ variable "allowed_ipv6_cidr_blocks" {
   description = "IPv6 CIDR blocks allowed to reach the public load balancer."
   type        = list(string)
   default     = []
+
+  validation {
+    condition     = length(var.allowed_ipv6_cidr_blocks) > 0
+    error_message = "allowed_ipv6_cidr_blocks must contain at least one IPv6 CIDR block for ALB ingress."
+  }
 }
 
 variable "app_port" {
@@ -72,7 +77,12 @@ variable "ecr_repository_name" {
 variable "image_tag" {
   description = "Container image tag to deploy."
   type        = string
-  default     = "latest"
+  default     = ""
+
+  validation {
+    condition     = var.image_tag != ""
+    error_message = "image_tag must be set to the ECR image tag you want the service to deploy."
+  }
 }
 
 variable "rails_master_key_ssm_parameter" {

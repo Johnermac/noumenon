@@ -8,8 +8,7 @@ ARG ALPINE_VERSION=3.23
 FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS build
 WORKDIR /app
 
-ENV BUNDLE_PATH=/usr/local/bundle \
-    BUNDLE_WITHOUT=production
+ENV BUNDLE_PATH=/usr/local/bundle
 
 RUN apk add --no-cache \
     build-base \
@@ -23,6 +22,7 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
 COPY . .
+RUN bundle exec rails assets:precompile
 
 # -------------------------
 # Shared runtime base
@@ -30,7 +30,9 @@ COPY . .
 FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS runtime-base
 WORKDIR /app
 
-ENV RAILS_ENV=development \
+ENV RAILS_ENV=production \
+    RAILS_SERVE_STATIC_FILES=true \
+    RAILS_LOG_TO_STDOUT=true \
     REDIS_URL=redis://redis:6379/0 \
     SCREENSHOT_ENABLED=true \
     BUNDLE_PATH=/usr/local/bundle \
