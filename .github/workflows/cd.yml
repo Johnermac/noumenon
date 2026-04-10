@@ -1,0 +1,97 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_DIR: infra/terraform
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  IMAGE_TAG: ${{ github.sha }}
+  TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+  TF_STATE_KEY: ${{ vars.TF_STATE_KEY }}
+  TF_STATE_LOCK_TABLE: ${{ vars.TF_STATE_LOCK_TABLE }}
+
+jobs:
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+      TF_VAR_project_name: noumenon
+      TF_VAR_image_tag: ${{ github.sha }}
+      TF_VAR_allowed_ipv6_cidr_blocks: ${{ secrets.AWS_ALLOWED_IPV6_CIDR_BLOCKS_JSON }}
+      TF_VAR_rails_master_key_ssm_parameter: ${{ vars.RAILS_MASTER_KEY_SSM_PARAMETER }}
+      TF_VAR_secret_key_base_ssm_parameter: ${{ vars.SECRET_KEY_BASE_SSM_PARAMETER }}
+      TF_VAR_secret_key_base: ${{ secrets.SECRET_KEY_BASE }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ env.TF_STATE_KEY }}" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ env.TF_STATE_LOCK_TABLE }}"
+
+      - name: Terraform fmt
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform fmt -check
+
+      - name: Terraform validate
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform validate
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ${{ env.TF_DIR }}
+          framework: terraform
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan
+
+      - name: Bootstrap ECR repository
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve -target=aws_ecr_repository.app
+
+      - name: Read ECR repository URL
+        id: ecr
+        working-directory: ${{ env.TF_DIR }}
+        run: echo "repository_url=$(terraform output -raw ecr_repository_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build runtime-slimmed image
+        run: |
+          docker build \
+            --target runtime-slimmed \
+            -t ${{ steps.ecr.outputs.repository_url }}:${{ env.IMAGE_TAG }} \
+            .
+
+      - name: Push image to Amazon ECR
+        run: docker push ${{ steps.ecr.outputs.repository_url }}:${{ env.IMAGE_TAG }}
+
+      - name: Apply Terraform stack
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve
