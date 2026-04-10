@@ -40,7 +40,6 @@ gem "addressable", ">= 2.9.0"
 
 gem "sidekiq", "= 7.3.9" 
 gem "nokogiri"
-gem "typhoeus"
 gem "httpx", "= 1.4.4"
 gem 'selenium-webdriver', '= 4.7.1'
 gem 'watir', '= 7.2.2'

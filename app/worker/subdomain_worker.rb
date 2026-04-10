@@ -1,37 +1,26 @@
-require "typhoeus"
+require "httpx"
 require "redis"
 
 class SubdomainWorker
   include Sidekiq::Worker
   RESULT_TTL = 7200
+  REQUEST_TIMEOUT = { connect_timeout: 5, operation_timeout: 5 }.freeze
 
   def perform(site, subdomains, total_subdomains)
     begin
-      hydra = Typhoeus::Hydra.hydra
-
-      # Queue requests for all subdomains
       subdomains.each do |subdomain|
-        request = Typhoeus::Request.new(
-          "http://#{subdomain}",
-          followlocation: true,
-          timeout: 5 # Short timeout to avoid long delays
-        )
+        response = HTTPX.with(timeout: REQUEST_TIMEOUT, follow_redirects: true).get("http://#{subdomain}")
 
-        # Handle response for each subdomain
-        request.on_complete do |response|
-          if response.success? || response.code.to_s.start_with?("3")
-            REDIS.sadd("active_subdomains_#{site}", subdomain)
-            puts "---> Active subdomain: #{subdomain}"          
-          end
+        if response.is_a?(HTTPX::Response) && response.status.to_s.start_with?("2", "3")
+          REDIS.sadd("active_subdomains_#{site}", subdomain)
+          puts "---> Active subdomain: #{subdomain}"
         end
-
-        hydra.queue(request) # Add request to Hydra queue
       end
-
-      hydra.run
-           
+    
+    rescue HTTPX::Error => e
+      puts "HTTP error processing subdomains batch for #{site}: #{e.message}"
     rescue StandardError => e
-      puts "Error processing subdomains batch for #{site}: #{e.message}"   
+      puts "Error processing subdomains batch for #{site}: #{e.message}"
     ensure
       # Track the total number of subdomains processed (active or inactive)
       REDIS.incrby("processed_subdomains_#{site}", subdomains.size)
