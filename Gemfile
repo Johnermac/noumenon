@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby "3.0.2"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "= 7.1.5.1"
+gem "rails", "= 7.1.5.2"
 
 
 # Use the Puma web server [https://github.com/puma/puma]
@@ -34,6 +34,7 @@ gem "redis", "= 5.4.0"
 gem "redis-client", "= 0.24.0"
 gem "sqlite3", "= 1.7.3"
 gem "net-imap", "= 0.4.19"
+gem "rack-session", ">= 2.1.2"
 
 
 gem "sidekiq", "= 7.3.9" 
