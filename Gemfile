@@ -35,6 +35,7 @@ gem "redis-client", "= 0.24.0"
 gem "sqlite3", "= 1.7.3"
 gem "net-imap", "= 0.4.19"
 gem "rack-session", ">= 2.1.2"
+gem "addressable", ">= 2.9.0"
 
 
 gem "sidekiq", "= 7.3.9" 

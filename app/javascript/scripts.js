@@ -9,6 +9,11 @@ function asBool(value) {
   return value === true || value === "true";
 }
 
+function csrfToken() {
+  const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+  return tokenMeta ? tokenMeta.content : null;
+}
+
 function moduleStatus(enabled, complete) {
   if (enabled === false) return "not enabled";
   return complete ? "complete" : "running";
@@ -260,9 +265,14 @@ document.getElementById("scan-form").addEventListener("submit", async function(e
   }
 
   try {
+    const headers = { "Content-Type": "application/json" };
+    const token = csrfToken();
+    if (token) headers["X-CSRF-Token"] = token;
+
     const response = await fetch("/scans/create", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "same-origin",
       body: JSON.stringify({ site, scan_directories: scanDirectories, scan_subdomains: scanSubdomains, scan_links: scanLinks, scan_emails: scanEmails, scan_screenshots: scanScreenshots })
     });
 
