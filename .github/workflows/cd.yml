@@ -13,9 +13,9 @@ env:
   TF_DIR: infra/terraform
   AWS_REGION: ${{ vars.AWS_REGION }}
   IMAGE_TAG: ${{ github.sha }}
-  TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
-  TF_STATE_KEY: ${{ vars.TF_STATE_KEY }}
-  TF_STATE_LOCK_TABLE: ${{ vars.TF_STATE_LOCK_TABLE }}
+  TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+  TF_STATE_KEY: ${{ secrets.TF_STATE_KEY }}
+  TF_STATE_LOCK_TABLE: ${{ secrets.TF_STATE_LOCK_TABLE }}
 
 jobs:
   deploy:
