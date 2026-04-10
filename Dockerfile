@@ -14,6 +14,7 @@ RUN apk add --no-cache \
     build-base \
     sqlite-dev \
     ruby-dev \
+    yaml-dev \
     curl \
     zip \
     unzip
