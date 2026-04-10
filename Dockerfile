@@ -9,8 +9,7 @@ FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS build
 WORKDIR /app
 
 ENV BUNDLE_PATH=/usr/local/bundle \
-    BUNDLE_WITHOUT=production \
-    BUNDLE_FORCE_RUBY_PLATFORM=true
+    BUNDLE_WITHOUT=production
 
 RUN apk add --no-cache \
     build-base \
