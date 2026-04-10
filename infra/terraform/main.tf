@@ -1,6 +1,6 @@
 locals {
   name_prefix = var.project_name
-  secret_arns  = compact([var.rails_master_key_ssm_parameter, var.secret_key_base_ssm_parameter])
+  secret_arns = compact([var.rails_master_key_ssm_parameter, var.secret_key_base_ssm_parameter])
   app_environment = concat(
     [
       { name = "RAILS_ENV", value = "production" },
@@ -17,10 +17,10 @@ locals {
 }
 
 resource "aws_vpc" "app" {
-  cidr_block           = var.vpc_cidr
+  cidr_block                       = var.vpc_cidr
   assign_generated_ipv6_cidr_block = true
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  enable_dns_hostnames             = true
+  enable_dns_support               = true
 
   tags = {
     Name = "${local.name_prefix}-vpc"
@@ -36,13 +36,13 @@ resource "aws_internet_gateway" "app" {
 }
 
 resource "aws_subnet" "public" {
-  count                   = length(var.public_subnet_cidrs)
-  vpc_id                  = aws_vpc.app.id
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.app.ipv6_cidr_block, 8, count.index)
-  availability_zone       = var.availability_zones[count.index]
+  count                           = length(var.public_subnet_cidrs)
+  vpc_id                          = aws_vpc.app.id
+  cidr_block                      = var.public_subnet_cidrs[count.index]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.app.ipv6_cidr_block, 8, count.index)
+  availability_zone               = var.availability_zones[count.index]
   assign_ipv6_address_on_creation = true
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch         = true
 
   tags = {
     Name = "${local.name_prefix}-public-${count.index + 1}"
@@ -153,8 +153,8 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_default" {
 
 resource "aws_iam_role_policy" "ecs_task_execution_ssm" {
   count = length(local.secret_arns) > 0 ? 1 : 0
-  name = "${local.name_prefix}-ecs-execution-ssm"
-  role = aws_iam_role.ecs_task_execution.id
+  name  = "${local.name_prefix}-ecs-execution-ssm"
+  role  = aws_iam_role.ecs_task_execution.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -185,10 +185,10 @@ resource "aws_security_group" "alb" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
 }
@@ -206,10 +206,10 @@ resource "aws_security_group" "app" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
 }
@@ -227,10 +227,10 @@ resource "aws_security_group" "redis" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
 }
