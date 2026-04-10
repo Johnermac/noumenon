@@ -32,6 +32,7 @@ gem "irb", "= 1.15.1"
 
 gem "redis", "= 5.4.0"
 gem "redis-client", "= 0.24.0"
+gem "connection_pool", "~> 2.5"
 gem "sqlite3", "~> 2.0"
 gem "net-imap", "= 0.4.19"
 gem "rack-session", ">= 2.1.2"
