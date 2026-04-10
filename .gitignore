@@ -65,3 +65,4 @@
 # Ignore Terraform docs and example files.
 /infra/terraform/README.md
 /infra/terraform/*.tfvars.example
+/infra/bootstrap/*.tfvars*
