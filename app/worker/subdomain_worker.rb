@@ -9,7 +9,7 @@ class SubdomainWorker
   def perform(site, subdomains, total_subdomains)
     begin
       subdomains.each do |subdomain|
-        response = HTTPX.with(timeout: REQUEST_TIMEOUT, follow_redirects: true).get("http://#{subdomain}")
+        response = HTTPX.plugin(:follow_redirects).with(timeout: REQUEST_TIMEOUT).get("http://#{subdomain}")
 
         if response.is_a?(HTTPX::Response) && response.status.to_s.start_with?("2", "3")
           REDIS.sadd("active_subdomains_#{site}", subdomain)

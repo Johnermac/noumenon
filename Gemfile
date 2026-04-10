@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby "3.2.11"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "= 7.1.5.2"
+gem "rails", "= 7.2.3.1"
 
 
 # Use the Puma web server [https://github.com/puma/puma]
