@@ -16,7 +16,6 @@ RUN apk add --no-cache \
     sqlite-dev \
     ruby-dev \
     yaml-dev \
-    curl \
     zip \
     unzip
 
@@ -39,7 +38,6 @@ ENV RAILS_ENV=development \
 
 RUN apk add --no-cache \
     sqlite \
-    curl \
     zip \
     && adduser -D appuser
 
