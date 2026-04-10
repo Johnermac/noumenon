@@ -50,11 +50,12 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count             = length(var.private_subnet_cidrs)
-  vpc_id            = aws_vpc.app.id
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.app.ipv6_cidr_block, 8, length(var.public_subnet_cidrs) + count.index)
-  availability_zone = var.availability_zones[count.index]
+  count                   = length(var.private_subnet_cidrs)
+  vpc_id                  = aws_vpc.app.id
+  cidr_block              = var.private_subnet_cidrs[count.index]
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.app.ipv6_cidr_block, 8, length(var.public_subnet_cidrs) + count.index)
+  availability_zone       = var.availability_zones[count.index]
+  map_public_ip_on_launch = false
 
   tags = {
     Name = "${local.name_prefix}-private-${count.index + 1}"
@@ -113,7 +114,7 @@ resource "aws_route_table_association" "private" {
 
 resource "aws_ecr_repository" "app" {
   name                 = var.ecr_repository_name
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -185,11 +186,10 @@ resource "aws_security_group" "alb" {
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.app.id]
   }
 }
 
@@ -206,11 +206,10 @@ resource "aws_security_group" "app" {
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.redis.id]
   }
 }
 
@@ -227,11 +226,10 @@ resource "aws_security_group" "redis" {
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.app.id]
   }
 }
 

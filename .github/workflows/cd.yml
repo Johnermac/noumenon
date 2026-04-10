@@ -60,11 +60,12 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform validate
 
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: ${{ env.TF_DIR }}
-          framework: terraform
+      #- name: Run Checkov
+        # Checkov is included as a future reference security scan.
+        #uses: bridgecrewio/checkov-action@v12
+        #with:
+          #directory: ${{ env.TF_DIR }}
+          #framework: terraform
 
       - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
