@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG RUBY_VERSION=3.0.2
+ARG RUBY_VERSION=3.2.11
 
 # -------------------------
 # Build stage
@@ -14,6 +14,7 @@ RUN apk add --no-cache \
     build-base \
     sqlite-dev \
     ruby-dev \
+    yaml-dev \
     curl \
     zip \
     unzip
