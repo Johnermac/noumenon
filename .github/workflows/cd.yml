@@ -93,6 +93,13 @@ jobs:
       - name: Push image to Amazon ECR
         run: docker push ${{ steps.ecr.outputs.repository_url }}:${{ env.IMAGE_TAG }}
 
+      - name: Import existing resources (state recovery)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform import aws_lb.app noumenon-alb || true
+          terraform import aws_lb_target_group.app noumenon-tg || true
+          terraform import aws_elasticache_subnet_group.redis noumenon-redis-subnets || true
+
       - name: Apply Terraform stack
         working-directory: ${{ env.TF_DIR }}
         run: terraform apply -auto-approve
